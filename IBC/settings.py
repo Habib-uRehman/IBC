@@ -8,6 +8,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', 'default-development-key')
 
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
@@ -15,7 +17,7 @@ DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = ['*']  # For development
 # In production, use your Railway domain and any custom domains
 ALLOWED_HOSTS = ['.railway.app', 'localhost', '127.0.0.1']
-CSRF_TRUSTED_ORIGINS= ["https://ibc-production.up.railway.app/"]
+CSRF_TRUSTED_ORIGINS = ['https://ibc-production.up.railway.app']
 
 # Site URL for QR code generation
 SITE_URL = 'http://localhost:8000'
