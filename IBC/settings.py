@@ -14,13 +14,15 @@ CSRF_COOKIE_SECURE = True
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*']  # For development
-# In production, use your Railway domain and any custom domains
 ALLOWED_HOSTS = ['.railway.app', 'localhost', '127.0.0.1']
-CSRF_TRUSTED_ORIGINS = ['https://ibc-production.up.railway.app']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://ibc-production.up.railway.app',
+    'https://*.railway.app'
+]
 
 # Site URL for QR code generation
-SITE_URL = 'http://localhost:8000'
+SITE_URL = 'https://ibc-production.up.railway.app'
 
 # Application definition
 
