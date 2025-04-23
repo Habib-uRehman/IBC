@@ -1,0 +1,233 @@
+/* Dashboard CSS for admin and operator pages */
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .stat-card {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .stat-card-title {
+    color: var(--text-light);
+    font-size: 14px;
+    margin-bottom: 5px;
+  }
+  
+  .stat-card-value {
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--text);
+  }
+  
+  /* Quota Cards */
+  .grid-50-50 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  
+  @media (max-width: 768px) {
+    .grid-50-50 {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .quota-card {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .quota-card h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 18px;
+    color: var(--text);
+  }
+  
+  .progress-container {
+    height: 10px;
+    background-color: #e5e7eb;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  
+  .progress-bar {
+    height: 100%;
+    background-color: var(--primary);
+    border-radius: 5px;
+  }
+  
+  /* Recent Activity */
+  .recent-item {
+    padding: 15px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .recent-item:last-child {
+    border-bottom: none;
+  }
+  
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: normal;
+    margin-left: 5px;
+  }
+  
+  /* Modal Styles */
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  .modal-content {
+    background-color: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+  }
+  
+  .modal-body {
+    padding: 20px;
+  }
+  
+  .close {
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text-light);
+  }
+  
+  .close:hover {
+    color: var(--text);
+  }
+  
+  /* Operator Performance Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  table thead th {
+    background-color: var(--background-light);
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-light);
+    border-bottom: 1px solid var(--border);
+  }
+  
+  table tbody td {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  
+  table tbody tr:hover {
+    background-color: var(--background-light);
+  }
+  
+  /* Utility classes */
+  .d-flex {
+    display: flex;
+  }
+  
+  .justify-between {
+    justify-content: space-between;
+  }
+  
+  .align-center {
+    align-items: center;
+  }
+  
+  .text-muted {
+    color: var(--text-light);
+  }
+  
+  .mt-2 {
+    margin-top: 10px;
+  }
+  
+  .mt-3 {
+    margin-top: 15px;
+  }
+  
+  .mt-4 {
+    margin-top: 20px;
+  }
+  
+  .btn-group {
+    display: flex;
+    gap: 5px;
+  }
+  
+  /* Status badges for tickets */
+  .status-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: normal;
+  }
+  
+  .status-unscanned {
+    background-color: #e5e7eb;
+    color: #374151;
+  }
+  
+  .status-scanned-gate1 {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+  }
+  
+  .status-scanned-both {
+    background-color: #d1fae5;
+    color: #047857;
+  }
+  
+  .status-tampered {
+    background-color: #fee2e2;
+    color: #b91c1c;
+  }
