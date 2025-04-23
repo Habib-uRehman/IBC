@@ -1,0 +1,244 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Ticket</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    .header {
+      background-color: #1d4ed8;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    
+    .header i {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+    
+    .content {
+      padding: 20px;
+    }
+    
+    .verification-result {
+      text-align: center;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+    }
+    
+    .verification-success {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+    
+    .verification-error {
+      background-color: #fee2e2;
+      color: #b91c1c;
+    }
+    
+    .verification-warning {
+      background-color: #fef3c7;
+      color: #92400e;
+    }
+    
+    .ticket-info {
+      margin-top: 20px;
+    }
+    
+    .info-item {
+      display: flex;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .info-label {
+      flex: 1;
+      font-weight: bold;
+      color: #555;
+    }
+    
+    .info-value {
+      flex: 2;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+    
+    .status-unscanned {
+      background-color: #e5e7eb;
+      color: #374151;
+    }
+    
+    .status-scanned {
+      background-color: #bfdbfe;
+      color: #1e40af;
+    }
+    
+    .status-tampered {
+      background-color: #fee2e2;
+      color: #b91c1c;
+    }
+    
+    .scan-info {
+      margin-top: 20px;
+      background-color: #f3f4f6;
+      padding: 15px;
+      border-radius: 5px;
+    }
+    
+    .scan-title {
+      margin-top: 0;
+      color: #1f2937;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    
+    .footer {
+      background-color: #f3f4f6;
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <i class="fas fa-ticket-alt"></i>
+      <h1>Ticket Verification</h1>
+    </div>
+    
+    <div class="content">
+      {% if is_valid %}
+        {% if ticket.is_tampered %}
+          <div class="verification-result verification-warning">
+            <h2><i class="fas fa-exclamation-triangle"></i> Warning: Tampered Ticket</h2>
+            <p>This ticket has been flagged as potentially tampered. It was scanned at Gate 2 without being scanned at Gate 1 first.</p>
+          </div>
+        {% elif ticket.status == "unscanned" %}
+          <div class="verification-result verification-success">
+            <h2><i class="fas fa-check-circle"></i> Valid Ticket</h2>
+            <p>This ticket is valid and has not been scanned yet.</p>
+          </div>
+        {% elif ticket.status == "scanned_gate1" %}
+          <div class="verification-result verification-success">
+            <h2><i class="fas fa-check-circle"></i> Valid Ticket</h2>
+            <p>This ticket is valid and has been scanned at Gate 1.</p>
+          </div>
+        {% elif ticket.status == "scanned_both" %}
+          <div class="verification-result verification-success">
+            <h2><i class="fas fa-check-circle"></i> Valid Ticket - Fully Processed</h2>
+            <p>This ticket has been scanned at both gates.</p>
+          </div>
+        {% endif %}
+        
+        <div class="ticket-info">
+          <h3>Ticket Information</h3>
+          
+          <div class="info-item">
+            <div class="info-label">Ticket ID:</div>
+            <div class="info-value">{{ ticket.ticket_id }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Holder Name:</div>
+            <div class="info-value">{{ user.full_name }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">CNIC:</div>
+            <div class="info-value">{{ user.cnic_number }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Ticket Type:</div>
+            <div class="info-value">{{ ticket.get_ticket_type_display }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Status:</div>
+            <div class="info-value">
+              <span class="status-badge {% if ticket.is_tampered %}status-tampered{% elif ticket.status == 'unscanned' %}status-unscanned{% else %}status-scanned{% endif %}">
+                {{ ticket.get_status_display }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Generated On:</div>
+            <div class="info-value">{{ ticket.created_at|date:"F d, Y H:i:s" }}</div>
+          </div>
+        </div>
+        
+        <div class="scan-info">
+          <h3 class="scan-title">Scan Information</h3>
+          
+          <div class="info-item">
+            <div class="info-label">Gate 1 (Entry):</div>
+            <div class="info-value">
+              {% if gate1_scan %}
+                {{ gate1_scan.scanned_at|date:"F d, Y H:i:s" }}
+              {% else %}
+                Not Scanned
+              {% endif %}
+            </div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Gate 2 (Exit):</div>
+            <div class="info-value">
+              {% if gate2_scan %}
+                {{ gate2_scan.scanned_at|date:"F d, Y H:i:s" }}
+              {% else %}
+                Not Scanned
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        
+      {% else %}
+        <div class="verification-result verification-error">
+          <h2><i class="fas fa-times-circle"></i> Invalid Ticket</h2>
+          <p>{{ message }}</p>
+        </div>
+      {% endif %}
+    </div>
+    
+    <div class="footer">
+      <p>IBC Event Ticketing System &copy; 2025</p>
+      <p>This verification page shows the current status of the ticket. For any issues, please contact the event organizers.</p>
+    </div>
+  </div>
+</body>
+</html>

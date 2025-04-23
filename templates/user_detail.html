@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}User Details - {{ user.full_name }}{% endblock %}
+
+{% block content %}
+<div class="header">
+  <div class="header-title">User Details</div>
+  <div class="user-info">
+    <img src="{% static 'images/user.png' %}" alt="User">
+    <span>{{ request.user.username }}</span>
+  </div>
+</div>
+
+{% if messages %}
+<div class="messages">
+  {% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %}">
+      {{ message }}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="grid-50-50">
+  <!-- User Information -->
+  <div class="card">
+    <div class="card-header">
+      <div>User Information</div>
+      <a href="{% url 'edit_user' user_id=user.user_id %}" class="btn btn-outline btn-sm">Edit</a>
+    </div>
+    <div class="card-body">
+      <div class="d-flex align-center mb-4">
+        <img src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'images/user.png' %}{% endif %}" alt="User" style="border-radius: 50%; margin-right: 15px; width: 80px; height: 80px;">
+        <div>
+          <h2 style="margin: 0 0 5px 0;">{{ user.full_name }}</h2>
+          <p style="margin: 0; color: var(--text-light);">{{ user.email }}</p>
+        </div>
+      </div>
+      
+      <table class="user-details-table" style="width: 100%;">
+        <tr>
+          <th>Father's Name:</th>
+          <td>{{ user.father_name|default:"-" }}</td>
+        </tr>
+        <tr>
+          <th>CNIC Number:</th>
+          <td>{{ user.cnic_number }}</td>
+        </tr>
+        <tr>
+          <th>Phone Number:</th>
+          <td>{{ user.phone_number }}</td>
+        </tr>
+        <tr>
+          <th>Gender:</th>
+          <td>{{ user.get_gender_display }}</td>
+        </tr>
+        <tr>
+          <th>Age:</th>
+          <td>{{ user.age|default:"-" }}</td>
+        </tr>
+        <tr>
+          <th>Registered On:</th>
+          <td>{{ user.created_at|date:"F d, Y" }}</td>
+        </tr>
+        <tr>
+          <th>User ID:</th>
+          <td>{{ user.user_id }}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  
+  <!-- Quick Actions -->
+  <div class="card">
+    <div class="card-header">
+      <div>Quick Actions</div>
+    </div>
+    <div class="card-body">
+      <a href="{% url 'generate_ticket' user_id=user.user_id %}" class="btn btn-primary w-100 mb-4">
+        <i class="fas fa-ticket-alt"></i> Generate New Ticket
+      </a>
+      <a href="{% url 'users_list' %}" class="btn btn-outline w-100 mb-4">
+        <i class="fas fa-users"></i> Back to User List
+      </a>
+      <a href="#" class="btn btn-outline w-100">
+        <i class="fas fa-edit"></i> Edit User
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- User's Tickets -->
+<div class="card mt-4">
+  <div class="card-header">
+    <div>User's Tickets</div>
+    <a href="{% url 'generate_ticket' user_id=user.user_id %}" class="btn btn-outline btn-sm">Generate New Ticket</a>
+  </div>
+  <div class="card-body">
+    <table>
+      <thead>
+        <tr>
+          <th>Ticket ID</th>
+          <th>Type</th>
+          <th>Price</th>
+          <th>Status</th>
+          <th>Generated On</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ticket in tickets %}
+        <tr>
+          <td>{{ ticket.ticket_id|truncatechars:10 }}</td>
+          <td>{{ ticket.get_ticket_type_display }}</td>
+          <td>PKR {{ ticket.price }}</td>
+          <td><span class="status-badge {{ ticket.get_status_display_class }}">{{ ticket.get_status_display }}</span></td>
+          <td>{{ ticket.created_at|date:"M d, Y H:i" }}</td>
+          <td>
+            <a href="{% url 'ticket_detail' ticket_id=ticket.ticket_id %}" class="btn btn-icon btn-outline"><i class="fas fa-eye"></i></a>
+            <a href="{% url 'print_ticket' ticket_id=ticket.ticket_id %}" class="btn btn-icon btn-outline"><i class="fas fa-print"></i></a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center">No tickets generated for this user yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Scan History -->
+{% if tickets %}
+<div class="card mt-4">
+  <div class="card-header">
+    <div>Scan History</div>
+  </div>
+  <div class="card-body">
+    <table>
+      <thead>
+        <tr>
+          <th>Ticket ID</th>
+          <th>Gate</th>
+          <th>Scan Time</th>
+          <th>Scanned By</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ticket in tickets %}
+          {% for scan in ticket.scan_logs.all %}
+            <tr>
+              <td>{{ ticket.ticket_id|truncatechars:10 }}</td>
+              <td>{{ scan.get_gate_display }}</td>
+              <td>{{ scan.scanned_at|date:"M d, Y H:i:s" }}</td>
+              <td>{{ scan.scanned_by.username }}</td>
+              <td>{{ scan.notes|default:"-" }}</td>
+            </tr>
+          {% endfor %}
+        {% empty %}
+          <tr>
+            <td colspan="5" class="text-center">No scan history available.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

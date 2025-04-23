@@ -1,0 +1,233 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Print Ticket - {{ user.full_name }}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* Print-specific styles */
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+      }
+      .no-print {
+        display: none;
+      }
+    }
+    
+    /* Common ticket styles */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .print-container {
+      width: 100%;
+      max-width: 800px;
+      margin: 20px auto;
+    }
+    
+    .print-actions {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .print-btn {
+      background-color: #1d4ed8;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 0 5px;
+    }
+    
+    /* Ticket container with boxing championship design */
+    .ticket-container {
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Background image styles */
+    .ticket-bg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    
+    /* Content area that overlays directly on the image */
+    .ticket-content {
+      position: absolute;
+      top: 300px;  /* Adjust based on your image height to position below the logo */
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 30px;
+      background-color: rgba(255, 255, 255, 0.9);  /* Semi-transparent background */
+    }
+    
+    /* Details layout */
+    .details-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    
+    .details-table td {
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 18px;  /* Larger text */
+    }
+    
+    .details-table td:first-child {
+      font-weight: bold;
+      width: 180px;
+      color: #333;
+    }
+    
+    /* User name display */
+    .user-name {
+      font-size: 28px;  /* Larger text */
+      font-weight: bold;
+      color: {% if ticket_design == 'gawader' %}#1d4ed8{% else %}#dc2626{% endif %};
+      border-bottom: 2px solid {% if ticket_design == 'gawader' %}#1d4ed8{% else %}#dc2626{% endif %};
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    
+    /* Ticket info display */
+    .ticket-type-info {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: {% if ticket_design == 'gawader' %}#1d4ed8{% else %}#dc2626{% endif %};
+    }
+    
+    /* QR code section */
+    .qr-section {
+      position: absolute;
+      right: 30px;
+      bottom: 30px;
+      text-align: center;
+      max-width: 150px;
+    }
+    
+    .qr-section img {
+      max-width: 150px;
+      height: auto;
+      padding: 5px;
+      background-color: white;
+      border: 1px solid #eee;
+    }
+    
+    .ticket-id {
+      font-size: 10px;
+      color: #666;
+      margin-top: 5px;
+      word-break: break-all;
+    }
+    
+    /* Footer */
+    .ticket-footer {
+      position: absolute;
+      bottom: 10px;
+      left: 30px;
+      right: 200px;  /* Leave space for QR code */
+      font-size: 12px;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <div class="print-container">
+    <div class="print-actions no-print">
+      <button onclick="window.print()" class="print-btn">
+        <i class="fas fa-print"></i> Print Ticket
+      </button>
+      <button onclick="window.history.back()" class="print-btn" style="background-color: #555;">
+        Back
+      </button>
+    </div>
+    
+    <div class="ticket-container">
+      <!-- Banner with Boxing Championship Logo - used as the entire background -->
+      <img src="{% static 'images/ticket_bg_' %}{% if ticket_design == 'gawader' %}blue{% else %}red{% endif %}.jpg" 
+           alt="Ticket Banner" class="ticket-bg">
+      
+      <!-- Content overlaid directly on the image -->
+      <div class="ticket-content">
+        <!-- Ticket Type Info -->
+        <div class="ticket-type-info">{{ ticket.get_ticket_type_display|title }}</div>
+        
+        <!-- User name displayed prominently -->
+        <div class="user-name">{{ user.full_name }}</div>
+        
+        <!-- User Information Section (no image) -->
+        <table class="details-table">
+          <tr>
+            <td>Father's Name:</td>
+            <td>{{ user.father_name|default:"N/A" }}</td>
+          </tr>
+          <tr>
+            <td>CNIC:</td>
+            <td>{{ user.cnic_number }}</td>
+          </tr>
+          {% if user.relationship != 'self' and user.related_to %}
+          <tr>
+            <td>Related To:</td>
+            <td>{{ user.related_to }} ({{ user.get_relationship_display }})</td>
+          </tr>
+          {% endif %}
+          <tr>
+            <td>Gender:</td>
+            <td>{{ user.get_gender_display }}</td>
+          </tr>
+          <tr>
+            <td>Ticket Price:</td>
+            <td>PKR {{ ticket.price }}</td>
+          </tr>
+          <tr>
+            <td>Issue Date:</td>
+            <td>{{ ticket.created_at|date:"F d, Y" }}</td>
+          </tr>
+        </table>
+
+        <!-- QR Code Section -->
+        <div class="qr-section">
+          {% if ticket.qr_code %}
+          <img src="{{ ticket.qr_code.url }}" alt="Ticket QR Code">
+          <div class="ticket-id">{{ ticket.ticket_id }}</div>
+          {% else %}
+          <div>QR Code Not Available</div>
+          {% endif %}
+        </div>
+        
+        <!-- Footer -->
+        <div class="ticket-footer">
+          <p>Please present this E-ticket along with your original CNIC at the entry gate. Entry will not be permitted without a valid ticket.</p>
+          <p>Ticket ID: {{ ticket.ticket_id }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Auto-print when the page loads
+    window.onload = function() {
+      // Wait for images to load
+      setTimeout(function() {
+        // window.print();
+      }, 500);
+    };
+  </script>
+</body>
+</html>

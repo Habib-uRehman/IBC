@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Event Dashboard{% endblock %}
+
+{% block header_title %}Dashboard{% endblock %}
+
+{% block content %}
+
+
+
+<div class="card-body" style="margin-bottom: 20px;">
+  <p>Configure system preferences and options</p>
+</div>
+
+<div class="grid-50-50">
+  <!-- QR Code Settings -->
+  <div class="card">
+    <div class="card-header">
+      <div><i class="fas fa-qrcode"></i> QR Code Settings</div>
+    </div>
+    <div class="card-body">
+      <div class="form-group">
+        <label for="qr_size" class="form-label">QR Code Size</label>
+        <select id="qr_size" class="form-control">
+          <option>Small (200×200)</option>
+          <option>Medium (300×300)</option>
+          <option>Large (400×400)</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="error_correction" class="form-label">Error Correction</label>
+        <select id="error_correction" class="form-control">
+          <option>Low</option>
+          <option>Medium</option>
+          <option>High</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Include Logo</label>
+        <div>
+          <label class="switch">
+            <input type="checkbox">
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Ticket Template -->
+  <div class="card">
+    <div class="card-header">
+      <div><i class="fas fa-ticket-alt"></i> Ticket Template</div>
+    </div>
+    <div class="card-body">
+      <div class="form-group">
+        <label for="template_style" class="form-label">Template Style</label>
+        <select id="template_style" class="form-control">
+          <option>Modern</option>
+          <option>Classic</option>
+          <option>Minimal</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Show Event Logo</label>
+        <div>
+          <label class="switch">
+            <input type="checkbox">
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Include Terms</label>
+        <div>
+          <label class="switch">
+            <input type="checkbox">
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="grid-50-50 mt-4">
+  <!-- Entry Points -->
+  <div class="card">
+    <div class="card-header">
+      <div><i class="fas fa-door-open"></i> Entry Points</div>
+      <button class="btn btn-outline btn-sm">Add New</button>
+    </div>
+    <div class="card-body">
+      <div class="d-flex justify-between align-center" style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
+        <div>Main Entrance</div>
+        <div>
+          <button class="btn btn-icon btn-outline"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-icon btn-outline"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+      
+      <div class="d-flex justify-between align-center">
+        <div>VIP Entry</div>
+        <div>
+          <button class="btn btn-icon btn-outline"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-icon btn-outline"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Admin Profile -->
+  <div class="card">
+    <div class="card-header">
+      <div><i class="fas fa-user-shield"></i> Admin Profile</div>
+    </div>
+    <div class="card-body">
+      <div class="text-center mb-4">
+        <img src="https://via.placeholder.com/100" alt="Admin" style="border-radius: 50%;">
+        <div class="mt-4">
+          <button class="btn btn-outline">Change Photo</button>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="full_name" class="form-label">Full Name</label>
+        <input type="text" id="full_name" class="form-control" value="Admin User">
+      </div>
+      
+      <div class="form-group">
+        <label for="admin_email" class="form-label">Email</label>
+        <input type="email" id="admin_email" class="form-control" value="admin@example.com">
+      </div>
+      
+      <button class="btn btn-primary">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}
+
+

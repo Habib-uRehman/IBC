@@ -1,0 +1,400 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Financial Reports - IBC Ticketing System{% endblock %}
+
+{% block extra_css %}
+<style>
+  .revenue-card {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+  }
+  
+  .revenue-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  
+  .revenue-title {
+    font-size: 16px;
+    color: #64748b;
+    margin-bottom: 5px;
+  }
+  
+  .revenue-amount {
+    font-size: 24px;
+    font-weight: bold;
+    color: #1e293b;
+  }
+  
+  .revenue-subtitle {
+    font-size: 14px;
+    color: #94a3b8;
+    margin-top: 5px;
+  }
+  
+  .operator-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  .operator-info {
+    grid-column: 1 / 4;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  
+  .operator-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+  }
+  
+  .ticket-detail {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .ticket-count {
+    font-size: 18px;
+    font-weight: 600;
+  }
+  
+  .ticket-revenue {
+    font-size: 14px;
+    color: #64748b;
+  }
+  
+  .chart-container {
+    height: 400px;
+    margin-bottom: 30px;
+  }
+  
+  .gawader-color {
+    color: #1d4ed8;
+  }
+  
+  .chaman-color {
+    color: #dc2626;
+  }
+  
+  .date-filter {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+    margin-bottom: 20px;
+  }
+  
+  .date-filter .form-group {
+    flex: 1;
+  }
+  
+  .detail-table th {
+    white-space: nowrap;
+  }
+  
+  @media (max-width: 768px) {
+    .operator-card {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    
+    .operator-info {
+      grid-column: 1;
+    }
+    
+    .date-filter {
+      flex-direction: column;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header">
+  <div class="header-title">Financial Reports</div>
+  <div class="user-info">
+    <img src="{% static 'images/user.png' %}" alt="User">
+    <span>{{ request.user.username }}</span>
+  </div>
+</div>
+
+<!-- Date filter -->
+<div class="card">
+  <div class="card-header">
+    <div>Filter Reports</div>
+  </div>
+  <div class="card-body">
+    <form method="GET" action="{% url 'financial_reports' %}">
+      <div class="date-filter">
+        <div class="form-group">
+          <label for="date_from">Date From</label>
+          <input type="date" name="date_from" id="date_from" class="form-control" value="{{ date_from }}">
+        </div>
+        
+        <div class="form-group">
+          <label for="date_to">Date To</label>
+          <input type="date" name="date_to" id="date_to" class="form-control" value="{{ date_to }}">
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Apply Filter</button>
+        <a href="{% url 'financial_reports' %}" class="btn btn-outline">Clear Filter</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Summary cards -->
+<div class="card mt-4">
+  <div class="card-header">
+    <div>Revenue Summary</div>
+  </div>
+  <div class="card-body">
+    <div class="stats-grid">
+      <div class="revenue-card">
+        <div class="revenue-title">Total Revenue</div>
+        <div class="revenue-amount">PKR {{ total_revenue|floatformat:0 }}</div>
+        <div class="revenue-subtitle">From {{ total_tickets }} tickets</div>
+      </div>
+      
+      <div class="revenue-card">
+        <div class="revenue-title">Gawader Enclosure</div>
+        <div class="revenue-amount gawader-color">PKR {{ gawader_revenue|floatformat:0 }}</div>
+        <div class="revenue-subtitle">From {{ gawader_count }} tickets</div>
+      </div>
+      
+      <div class="revenue-card">
+        <div class="revenue-title">Chaman Enclosure</div>
+        <div class="revenue-amount chaman-color">PKR {{ chaman_revenue|floatformat:0 }}</div>
+        <div class="revenue-subtitle">From {{ chaman_count }} tickets</div>
+      </div>
+      
+      <div class="revenue-card">
+        <div class="revenue-title">Average Revenue</div>
+        <div class="revenue-amount">PKR {% if total_tickets > 0 %}{{ total_revenue|divisibleby:total_tickets|floatformat:0 }}{% else %}0{% endif %}</div>
+        <div class="revenue-subtitle">Per ticket</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Revenue By Operator -->
+<div class="card mt-4">
+  <div class="card-header">
+    <div>Revenue By Operator</div>
+    <a href="{% url 'export_financial_report' %}?{{ request.GET.urlencode }}" class="btn btn-outline btn-sm">
+      <i class="fas fa-file-excel"></i> Export to Excel
+    </a>
+  </div>
+  <div class="card-body">
+    {% if operators %}
+      {% for operator in operators %}
+        <div class="operator-card">
+          <div class="operator-info">
+            <div class="operator-name">{{ operator.name|default:"Unknown Operator" }}</div>
+            <div class="text-muted">Total Revenue: PKR {{ operator.total_revenue|floatformat:0 }}</div>
+          </div>
+          
+          <div class="ticket-detail">
+            <div class="ticket-count">{{ operator.total_tickets }}</div>
+            <div>Total Tickets</div>
+            <div class="ticket-revenue">PKR {{ operator.total_revenue|floatformat:0 }}</div>
+          </div>
+          
+          <div class="ticket-detail">
+            <div class="ticket-count gawader-color">{{ operator.gawader_tickets }}</div>
+            <div>Gawader Tickets</div>
+            <div class="ticket-revenue">PKR {{ operator.gawader_revenue|floatformat:0 }}</div>
+          </div>
+          
+          <div class="ticket-detail">
+            <div class="ticket-count chaman-color">{{ operator.chaman_tickets }}</div>
+            <div>Chaman Tickets</div>
+            <div class="ticket-revenue">PKR {{ operator.chaman_revenue|floatformat:0 }}</div>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-center p-4">No sales data available for the selected period.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Daily Sales Chart -->
+<div class="card mt-4">
+  <div class="card-header">
+    <div>Daily Sales</div>
+  </div>
+  <div class="card-body">
+    <div class="chart-container">
+      <canvas id="revenue-chart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Transactions -->
+<div class="card mt-4">
+  <div class="card-header">
+    <div>Recent Transactions</div>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="detail-table">
+        <thead>
+          <tr>
+            <th>Date & Time</th>
+            <th>Ticket ID</th>
+            <th>User</th>
+            <th>Ticket Type</th>
+            <th>Amount</th>
+            <th>Operator</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ticket in recent_tickets %}
+          <tr>
+            <td>{{ ticket.created_at|date:"M d, Y H:i" }}</td>
+            <td title="{{ ticket.ticket_id }}">{{ ticket.ticket_id|truncatechars:10 }}</td>
+            <td>{{ ticket.user.full_name }}</td>
+            <td>{{ ticket.get_ticket_type_display }}</td>
+            <td>PKR {{ ticket.price }}</td>
+            <td>
+              {% if ticket.user.registered_by %}
+                {{ ticket.user.registered_by.name }}
+              {% else %}
+                Unknown
+              {% endif %}
+            </td>
+            <td>
+              <span class="status-badge {{ ticket.get_status_display_class }}">
+                {{ ticket.get_status_display }}
+              </span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="text-center">No recent transactions found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Back button -->
+<div class="mt-4">
+  <a href="{% url 'admin_dashboard' %}" class="btn btn-outline">
+    <i class="fas fa-arrow-left"></i> Back to Dashboard
+  </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Chart data
+    const chartData = {{ chart_data|safe }};
+    
+    if (chartData && chartData.length > 0) {
+      const dates = chartData.map(item => item.date);
+      const gawaderRevenue = chartData.map(item => item.gawader_revenue);
+      const chamanRevenue = chartData.map(item => item.chaman_revenue);
+      const totalRevenue = chartData.map(item => item.total_revenue);
+      
+      // Create the revenue chart
+      const revenueCtx = document.getElementById('revenue-chart').getContext('2d');
+      new Chart(revenueCtx, {
+        type: 'bar',
+        data: {
+          labels: dates,
+          datasets: [
+            {
+              label: 'Total Revenue',
+              data: totalRevenue,
+              backgroundColor: 'rgba(99, 102, 241, 0.2)',
+              borderColor: 'rgb(99, 102, 241)',
+              borderWidth: 1,
+              type: 'line',
+              fill: false,
+              tension: 0.1,
+              order: 0
+            },
+            {
+              label: 'Gawader Enclosure',
+              data: gawaderRevenue,
+              backgroundColor: 'rgba(37, 99, 235, 0.7)',
+              borderColor: 'rgb(29, 78, 216)',
+              borderWidth: 1,
+              order: 1
+            },
+            {
+              label: 'Chaman Enclosure',
+              data: chamanRevenue,
+              backgroundColor: 'rgba(220, 38, 38, 0.7)',
+              borderColor: 'rgb(185, 28, 28)',
+              borderWidth: 1,
+              order: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Daily Revenue',
+              font: {
+                size: 16
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ': PKR ' + context.raw.toLocaleString();
+                }
+              }
+            },
+            legend: {
+              position: 'top'
+            }
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Date'
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Revenue (PKR)'
+              },
+              ticks: {
+                callback: function(value) {
+                  return 'PKR ' + value.toLocaleString();
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

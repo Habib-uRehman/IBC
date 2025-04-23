@@ -1,0 +1,747 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Scan Monitor - Event Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+  .scan-result {
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+  
+  .scan-result-success {
+    background-color: #dcfce7;
+    color: #15803d;
+    border-left: 5px solid #15803d;
+  }
+  
+  .scan-result-error {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border-left: 5px solid #b91c1c;
+  }
+  
+  .scan-result-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+    border-left: 5px solid #92400e;
+  }
+  
+  .scan-animation {
+    animation: pulse 1.5s infinite;
+  }
+  
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+  }
+  
+  .scanning-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--primary);
+    margin-bottom: 10px;
+  }
+  
+  .scanning-indicator i {
+    margin-right: 8px;
+    animation: spin 2s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .recent-scan {
+    background-color: #f8fafc;
+    border-left: 3px solid var(--primary);
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+  }
+  
+  .recent-scan.highlight {
+    background-color: #dbeafe;
+  }
+  
+  .status-badge {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-block;
+  }
+  
+  /* Statistics counter animations */
+  .counter-animate {
+    transition: all 0.5s ease;
+  }
+  
+  .flash {
+    animation: flash 1s;
+  }
+  
+  @keyframes flash {
+    0%, 100% { background-color: transparent; }
+    50% { background-color: #dbeafe; }
+  }
+  
+  /* Scanner target area */
+  .scanner-target {
+    border: 2px dashed var(--primary-light);
+    padding: 25px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .scanner-ready {
+    color: var(--primary);
+    font-weight: bold;
+    margin-top: 10px;
+  }
+  
+  /* Scanner indicator */
+  .scanner-indicator {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+  
+  .scanner-online {
+    background-color: #22c55e;
+  }
+  
+  .scanner-offline {
+    background-color: #ef4444;
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Elements
+    const scanForm = document.getElementById('scan-form');
+    const ticketIdField = document.getElementById('ticket_id');
+    const gateSelect = document.getElementById('gate_id');
+    const scanResult = document.getElementById('scan-result');
+    const scanTable = document.getElementById('scan-table').getElementsByTagName('tbody')[0];
+    const scannedCounter = document.getElementById('scanned-counter');
+    const remainingCounter = document.getElementById('remaining-counter');
+    const scannerStatus = document.getElementById('scanner-status');
+    const offlineQueue = document.getElementById('offline-queue');
+    
+    // Initialize local storage for offline scans
+    let offlineScans = JSON.parse(localStorage.getItem('offlineScans') || '[]');
+    
+    // Update UI for offline scans count
+    function updateOfflineUI() {
+      if (offlineQueue) {
+        if (offlineScans.length > 0) {
+          offlineQueue.textContent = offlineScans.length;
+          offlineQueue.classList.remove('hidden');
+        } else {
+          offlineQueue.classList.add('hidden');
+        }
+      }
+    }
+    
+    // Check connection status
+    function updateConnectionStatus() {
+      if (navigator.onLine) {
+        if (scannerStatus) {
+          scannerStatus.className = 'scanner-indicator scanner-online';
+          scannerStatus.nextElementSibling.textContent = 'Scanner Online';
+        }
+        syncOfflineScans();
+      } else {
+        if (scannerStatus) {
+          scannerStatus.className = 'scanner-indicator scanner-offline';
+          scannerStatus.nextElementSibling.textContent = 'Scanner Offline (Scans will be saved locally)';
+        }
+      }
+    }
+    
+    // Sync offline scans when online
+    function syncOfflineScans() {
+      if (offlineScans.length > 0 && navigator.onLine) {
+        const scanToSync = [...offlineScans]; // Clone the array
+        offlineScans = []; // Clear the queue
+        localStorage.setItem('offlineScans', JSON.stringify(offlineScans));
+        updateOfflineUI();
+        
+        // Show syncing message
+        if (scanResult) {
+          scanResult.style.display = 'block';
+          scanResult.className = 'scan-result scan-result-success';
+          scanResult.innerHTML = `<h3>Syncing ${scanToSync.length} offline scans...</h3>`;
+        }
+        
+        // Process each scan sequentially
+        let processed = 0;
+        
+        function processNextScan() {
+          if (processed >= scanToSync.length) {
+            // All done
+            if (scanResult) {
+              scanResult.innerHTML = `<h3>Sync Complete</h3><p>Successfully synchronized ${processed} scans.</p>`;
+            }
+            return;
+          }
+          
+          const scan = scanToSync[processed];
+          
+          // Create form data
+          const formData = new FormData();
+          formData.append('ticket_id', scan.ticket_id);
+          formData.append('gate', scan.gate);
+          if (scan.notes) formData.append('notes', scan.notes);
+          
+          // Send AJAX request
+          fetch('/scan/process/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            processed++;
+            if (scanResult) {
+              scanResult.innerHTML = `<h3>Syncing Offline Scans</h3><p>Progress: ${processed}/${scanToSync.length}</p>`;
+            }
+            processNextScan();
+          })
+          .catch(error => {
+            console.error('Error syncing scan:', error);
+            // Put the failed scan back in the queue
+            offlineScans.push(scan);
+            localStorage.setItem('offlineScans', JSON.stringify(offlineScans));
+            updateOfflineUI();
+            processed++;
+            processNextScan();
+          });
+        }
+        
+        // Start processing
+        processNextScan();
+      }
+    }
+    
+    // Listen for online/offline events
+    window.addEventListener('online', updateConnectionStatus);
+    window.addEventListener('offline', updateConnectionStatus);
+    
+    // Initial check
+    updateConnectionStatus();
+    updateOfflineUI();
+    
+    // Auto-focus on the ticket ID field on page load
+    if (ticketIdField) {
+      ticketIdField.focus();
+    }
+    
+    // Handle form submission
+    if (scanForm) {
+      scanForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Get form values
+        const ticketId = ticketIdField.value.trim();
+        const gate = gateSelect.value;
+        const notes = document.getElementById('notes')?.value || '';
+        
+        if (!ticketId) {
+          return; // Don't submit if empty
+        }
+        
+        // Play scan sound if available
+        const scanSound = document.getElementById('scan-sound');
+        if (scanSound) {
+          scanSound.play().catch(e => console.log('Could not play scan sound'));
+        }
+        
+        // Show scanning animation
+        if (scanResult) {
+          scanResult.style.display = 'block';
+          scanResult.className = 'scan-result scan-animation';
+          scanResult.innerHTML = '<h3>Processing scan...</h3>';
+        }
+        
+        if (navigator.onLine) {
+          // Online mode - send to server
+          const formData = new FormData(scanForm);
+          
+          fetch('/scan/process/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            console.log("Scan response:", data); // Debug line
+            
+            // Display the result
+            if (scanResult) {
+              scanResult.style.display = 'block';
+              
+              if (data.success) {
+                // Successful scan
+                scanResult.className = 'scan-result scan-result-success';
+                
+                // If ticket is tampered, add warning class
+                if (data.is_tampered) {
+                  scanResult.className = 'scan-result scan-result-warning';
+                }
+                
+                scanResult.innerHTML = `
+                  <h3>${data.message}</h3>
+                  <div>
+                    <p><strong>Ticket ID:</strong> ${data.ticket_id}</p>
+                    <p><strong>User:</strong> ${data.user_name}</p>
+                    <p><strong>Gate:</strong> ${data.gate}</p>
+                    <p><strong>Time:</strong> ${data.time}</p>
+                    <p><strong>Status:</strong> ${data.status}</p>
+                  </div>
+                `;
+                
+                // Add to recent scans table
+                const newRow = scanTable.insertRow(0);
+                newRow.className = 'flash';
+                newRow.innerHTML = `
+                  <td>${data.ticket_id}</td>
+                  <td>${data.user_name}</td>
+                  <td>${data.gate}</td>
+                  <td>${data.time}</td>
+                `;
+                
+                // Update counters with animation
+                if (scannedCounter && remainingCounter) {
+                  const scannedValue = parseInt(scannedCounter.textContent) + 1;
+                  const remainingValue = parseInt(remainingCounter.textContent) - 1;
+                  
+                  scannedCounter.textContent = scannedValue;
+                  scannedCounter.classList.add('flash');
+                  setTimeout(() => scannedCounter.classList.remove('flash'), 1000);
+                  
+                  if (remainingValue >= 0) {
+                    remainingCounter.textContent = remainingValue;
+                    remainingCounter.classList.add('flash');
+                    setTimeout(() => remainingCounter.classList.remove('flash'), 1000);
+                  }
+                }
+              } else {
+                // Failed scan
+                scanResult.className = 'scan-result scan-result-error';
+                scanResult.innerHTML = `
+                  <h3>Scan Failed</h3>
+                  <p>${data.message || "Unknown error occurred"}</p>
+                `;
+                
+                // Play error sound if available
+                const errorSound = document.getElementById('error-sound');
+                if (errorSound) {
+                  errorSound.play().catch(e => console.log('Could not play error sound'));
+                }
+              }
+            }
+          })
+          .catch(error => {
+            console.error('Error during scan processing:', error);
+            
+            if (scanResult) {
+              scanResult.style.display = 'block';
+              scanResult.className = 'scan-result scan-result-error';
+              scanResult.innerHTML = `
+                <h3>System Error</h3>
+                <p>An error occurred while processing the scan. Please try again.</p>
+                <p><small>${error.message || "Unknown error"}</small></p>
+              `;
+            }
+          })
+          .finally(() => {
+            // Clear input and refocus for next scan
+            ticketIdField.value = '';
+            ticketIdField.focus();
+          });
+        } else {
+          // Offline mode - store locally
+          const timestamp = new Date().toISOString();
+          offlineScans.push({
+            ticket_id: ticketId,
+            gate: gate,
+            notes: notes,
+            scanned_at: timestamp
+          });
+          
+          localStorage.setItem('offlineScans', JSON.stringify(offlineScans));
+          updateOfflineUI();
+          
+          // Show offline storage message
+          if (scanResult) {
+            scanResult.style.display = 'block';
+            scanResult.className = 'scan-result scan-result-warning';
+            scanResult.innerHTML = `
+              <h3>Offline Scan Saved</h3>
+              <p>This scan has been saved locally and will be processed when connection is restored.</p>
+              <p><strong>Ticket ID:</strong> ${ticketId}</p>
+              <p><strong>Gate:</strong> ${gate === 'gate1' ? 'Gate 1 (Entry)' : 'Gate 2 (Exit)'}</p>
+              <p><strong>Time:</strong> ${new Date().toLocaleTimeString()}</p>
+              <p><strong>Pending Scans:</strong> ${offlineScans.length}</p>
+            `;
+          }
+          
+          // Clear input and refocus for next scan
+          ticketIdField.value = '';
+          ticketIdField.focus();
+        }
+      });
+    }
+    
+    // Handle scanner auto-submit
+    if (ticketIdField) {
+      // Focus the input field when page loads
+      ticketIdField.focus();
+      
+      // Most scanners append a carriage return (Enter key) after scanning
+      ticketIdField.addEventListener('keypress', function(e) {
+        // Check if Enter key was pressed
+        if (e.key === 'Enter' && ticketIdField.value.trim() !== '') {
+          e.preventDefault(); // Prevent default form submission
+          
+          // Auto-select gate if needed
+          if (gateSelect && !gateSelect.value) {
+            gateSelect.value = gateSelect.options[0].value;
+          }
+          
+          // Submit the form
+          scanForm.dispatchEvent(new Event('submit'));
+        }
+      });
+      
+      // Keep focus on input field when clicking elsewhere
+      document.addEventListener('click', function(event) {
+        // Don't refocus if clicking on a select element or its options,
+        // or if clicking inside the notes field
+        if (event.target.tagName === 'SELECT' || 
+            event.target.tagName === 'OPTION' || 
+            event.target.id === 'notes' ||
+            event.target.id === 'gate_id') {
+          return;
+        }
+        
+        // For other elements, refocus on the ticket field after a small delay
+        setTimeout(() => {
+          ticketIdField.focus();
+        }, 100);
+      });
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+      // Alt+1 to select Gate 1
+      if (e.altKey && e.key === '1' && gateSelect) {
+        e.preventDefault();
+        gateSelect.value = 'gate1';
+      }
+      
+      // Alt+2 to select Gate 2
+      if (e.altKey && e.key === '2' && gateSelect) {
+        e.preventDefault();
+        gateSelect.value = 'gate2';
+      }
+      
+      // Ctrl+Space to clear and focus input
+      if (e.ctrlKey && e.key === ' ' && ticketIdField) {
+        e.preventDefault();
+        ticketIdField.value = '';
+        ticketIdField.focus();
+      }
+    });
+  });
+</script>
+<!-- Sound effects (optional) -->
+<audio id="scan-sound" preload="auto" src="{% static 'sounds/scan-beep.mp3' %}" style="display: none;"></audio>
+<audio id="error-sound" preload="auto" src="{% static 'sounds/error-beep.mp3' %}" style="display: none;"></audio>
+{% endblock %}
+
+{% block content %}
+<div class="header">
+  <div class="header-title">Scan Monitor</div>
+  <div class="user-info">
+    <img src="{% static 'images/user.png' %}" alt="User">
+    <span>{{ request.user.username }}</span>
+  </div>
+</div>
+
+{% if messages %}
+<div class="messages">
+  {% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %}">
+      {{ message }}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="card-body" style="margin-bottom: 20px;">
+  <div class="d-flex justify-between align-center">
+    <p>Live ticket scanning activity</p>
+    <div class="scanning-status">
+      <span id="scanner-status" class="scanner-indicator scanner-online"></span>
+      <span>Scanner Online</span>
+      <span id="offline-queue" class="status-badge status-unscanned hidden" style="margin-left: 10px;">0</span>
+    </div>
+  </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Scanned Tickets</div>
+        <div class="stat-card-value" id="scanned-counter">{{ stats.scanned }}</div>
+      </div>
+      <i class="fas fa-check-circle fa-lg" style="color: #64748b;"></i>
+    </div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Remaining Tickets</div>
+        <div class="stat-card-value" id="remaining-counter">{{ stats.remaining }}</div>
+      </div>
+      <i class="fas fa-clock fa-lg" style="color: #64748b;"></i>
+    </div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Active Entry Points</div>
+        <div class="stat-card-value">2</div>
+      </div>
+      <i class="fas fa-door-open fa-lg" style="color: #64748b;"></i>
+    </div>
+  </div>
+</div>
+
+<div class="grid-50-50">
+  <!-- Recent Scans -->
+  <div class="card">
+    <div class="card-header">
+      <div>Recent Scans</div>
+    </div>
+    <div class="card-body">
+      <table id="scan-table">
+        <thead>
+          <tr>
+            <th>Ticket ID</th>
+            <th>User</th>
+            <th>Entry Point</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for scan in recent_scans %}
+          <tr>
+            <td>{{ scan.ticket.ticket_id|truncatechars:10 }}</td>
+            <td>{{ scan.ticket.user.full_name }}</td>
+            <td>{{ scan.get_gate_display }}</td>
+            <td>{{ scan.scanned_at|time:"H:i:s" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="text-center">No recent scans</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <!-- Scan Ticket Form -->
+  <div>
+    <div class="card">
+      <div class="card-header">
+        <div>Scan Ticket</div>
+        <div class="scanning-indicator">
+          <i class="fas fa-qrcode"></i> Ready to scan
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="scanner-target">
+          <i class="fas fa-qrcode fa-3x" style="color: var(--primary-light);"></i>
+          <p class="scanner-ready">Scanner Ready</p>
+          <p style="color: var(--text-light); font-size: 12px;">
+            Scan a ticket QR code or enter ticket ID below
+          </p>
+        </div>
+        <!-- Add this to your scan_monitor.html, near the scan form -->
+<div class="form-group mt-4">
+  <button type="button" id="debug-scan" class="btn btn-outline-secondary">
+    <i class="fas fa-bug"></i> Debug Scanner
+  </button>
+  <div id="scanner-debug-output" class="mt-2 p-3 bg-light" style="display: none; font-family: monospace;">
+    Scanner output will appear here...
+  </div>
+</div>
+
+<!-- Add this JavaScript to your scan_monitor.html -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Debug scanner functionality
+    const debugBtn = document.getElementById('debug-scan');
+    const debugOutput = document.getElementById('scanner-debug-output');
+    const ticketIdField = document.getElementById('ticket_id');
+    
+    if (debugBtn && debugOutput && ticketIdField) {
+      debugBtn.addEventListener('click', function() {
+        // Toggle debug display
+        if (debugOutput.style.display === 'none') {
+          debugOutput.style.display = 'block';
+          debugBtn.textContent = 'Hide Debug Info';
+          
+          // Set up listener for scanner input
+          ticketIdField.addEventListener('input', function() {
+            const input = ticketIdField.value;
+            debugOutput.innerHTML = `
+              <strong>Raw input:</strong> ${input}<br>
+              <strong>Length:</strong> ${input.length}<br>
+              <strong>Char codes:</strong> ${Array.from(input).map(c => c.charCodeAt(0)).join(', ')}<br>
+              <strong>Hex:</strong> ${Array.from(input).map(c => c.charCodeAt(0).toString(16)).join(' ')}
+            `;
+          });
+          
+          // Focus the input field
+          ticketIdField.focus();
+        } else {
+          debugOutput.style.display = 'none';
+          debugBtn.textContent = 'Debug Scanner';
+        }
+      });
+    }
+  });
+</script>
+        <form id="scan-form">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="ticket_id" class="form-label">Ticket ID (QR Code):</label>
+            <input type="text" id="ticket_id" name="ticket_id" class="form-control" 
+                  placeholder="Scan or enter ticket ID" autofocus required>
+            <div class="d-flex justify-between" style="margin-top: 5px;">
+              <small style="color: var(--text-light);">
+                <i class="fas fa-keyboard"></i> Press Ctrl+Space to clear
+              </small>
+              <small style="color: var(--primary);">
+                <i class="fas fa-info-circle"></i> Auto-submits when scanned
+              </small>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="gate_id" class="form-label">Gate:</label>
+            <select id="gate_id" name="gate" class="form-control" required>
+              <option value="gate1">Gate 1 (Entry) - Alt+1</option>
+              <option value="gate2">Gate 2 (Exit) - Alt+2</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="notes" class="form-label">Notes (Optional):</label>
+            <textarea id="notes" name="notes" class="form-control" rows="2" placeholder="Optional notes"></textarea>
+          </div>
+          
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="fas fa-qrcode"></i> Scan Ticket
+          </button>
+        </form>
+        
+        <div id="scan-result" style="display: none;" class="scan-result scan-result-success">
+          <!-- Scan result will appear here -->
+        </div>
+      </div>
+    </div>
+    
+    <div class="card mt-4">
+      <div class="card-header">
+        <div>Last Scanned Users</div>
+      </div>
+      <div class="card-body">
+        {% for scan in recent_scans|slice:":3" %}
+        <div class="d-flex align-center recent-scan">
+          <img src="{% if scan.ticket.user.profile_picture %}{{ scan.ticket.user.profile_picture.url }}{% else %}{% static 'images/user.png' %}{% endif %}" 
+               alt="User" style="border-radius: 50%; margin-right: 10px; width: 40px; height: 40px;">
+          <div>
+            <div>{{ scan.ticket.user.full_name }}</div>
+            <div style="color: var(--text-light); font-size: 12px;">
+              {{ scan.get_gate_display }} - {{ scan.scanned_at|time:"H:i" }}
+            </div>
+          </div>
+          <div style="margin-left: auto;">
+            <span class="status-badge {% if scan.ticket.is_tampered %}status-tampered{% else %}status-scanned{% endif %}">
+              {{ scan.ticket.get_status_display }}
+            </span>
+          </div>
+        </div>
+        {% empty %}
+        <p>No scans yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scanning Instructions Modal -->
+<div class="modal" id="scanning-instructions" style="display: none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Scanner Instructions</h3>
+      <span class="close">&times;</span>
+    </div>
+    <div class="modal-body">
+      <h4>How to Use the Barcode Scanner</h4>
+      <ol>
+        <li>Connect your scanner to the computer via USB</li>
+        <li>Make sure this page is open and active</li>
+        <li>Select the appropriate gate (Gate 1 for entry, Gate 2 for exit)</li>
+        <li>Point the scanner at the ticket's QR code</li>
+        <li>Press the scan button on the scanner</li>
+        <li>The system will automatically process the scan</li>
+      </ol>
+      
+      <h4>Keyboard Shortcuts</h4>
+      <ul>
+        <li><strong>Alt+1</strong>: Select Gate 1</li>
+        <li><strong>Alt+2</strong>: Select Gate 2</li>
+        <li><strong>Ctrl+Space</strong>: Clear input field</li>
+      </ul>
+      
+      <h4>Troubleshooting</h4>
+      <ul>
+        <li>If the scanner doesn't read, try moving further or closer</li>
+        <li>Ensure the QR code is well-lit and not damaged</li>
+        <li>If offline, scans will be stored locally and synced when connection returns</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

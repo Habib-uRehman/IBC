@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}All Tickets - Admin View{% endblock %}
+
+{% block content %}
+<div class="header">
+  <div class="header-title">All Tickets</div>
+  <div class="user-info">
+    <img src="{% static 'images/user.png' %}" alt="User">
+    <span>{{ request.user.username }}</span>
+  </div>
+</div>
+
+{% if messages %}
+<div class="messages">
+  {% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %}">
+      {{ message }}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Total Tickets</div>
+        <div class="stat-card-value">{{ total_tickets }}</div>
+      </div>
+      <i class="fas fa-ticket-alt fa-lg" style="color: #64748b;"></i>
+    </div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Gwadar Tickets</div>
+        <div class="stat-card-value">{{ gawader_tickets }}</div>
+      </div>
+      <i class="fas fa-ticket-alt fa-lg" style="color: #1d4ed8;"></i>
+    </div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Chaman Tickets</div>
+        <div class="stat-card-value">{{ chaman_tickets }}</div>
+      </div>
+      <i class="fas fa-ticket-alt fa-lg" style="color: #dc2626;"></i>
+    </div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Total Revenue</div>
+        <div class="stat-card-value">PKR {{ total_revenue|floatformat:0 }}</div>
+      </div>
+      <i class="fas fa-money-bill fa-lg" style="color: #047857;"></i>
+    </div>
+  </div>
+</div>
+
+<!-- Filter Section -->
+<div class="card">
+  <div class="card-header">
+    <div>Filter Tickets</div>
+  </div>
+  <div class="card-body">
+    <form method="GET" class="filter-form">
+      <div class="filter-group">
+        <div class="form-group">
+          <label for="ticket_type">Ticket Type</label>
+          <select name="ticket_type" id="ticket_type" class="form-control">
+            <option value="">All</option>
+            <option value="Gawader Enclosure" {% if request.GET.ticket_type == 'Gawader Enclosure' %}selected{% endif %}>Gawader Enclosure</option>
+            <option value="Chaman Enclosure" {% if request.GET.ticket_type == 'Chaman Enclosure' %}selected{% endif %}>Chaman Enclosure</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="status">Status</label>
+          <select name="status" id="status" class="form-control">
+            <option value="">All</option>
+            <option value="unscanned" {% if request.GET.status == 'unscanned' %}selected{% endif %}>Unscanned</option>
+            <option value="scanned_gate1" {% if request.GET.status == 'scanned_gate1' %}selected{% endif %}>Scanned at Gate 1</option>
+            <option value="scanned_both" {% if request.GET.status == 'scanned_both' %}selected{% endif %}>Scanned at Both Gates</option>
+            <option value="tampered" {% if request.GET.status == 'tampered' %}selected{% endif %}>Tampered</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="operator">Registered By</label>
+          <select name="operator" id="operator" class="form-control">
+            <option value="">All Operators</option>
+            {% for op in operators %}
+              <option value="{{ op.id }}" {% if request.GET.operator == op.id|stringformat:"i" %}selected{% endif %}>{{ op.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="date_from">Date From</label>
+          <input type="date" name="date_from" id="date_from" class="form-control" value="{{ request.GET.date_from }}">
+        </div>
+        
+        <div class="form-group">
+          <label for="date_to">Date To</label>
+          <input type="date" name="date_to" id="date_to" class="form-control" value="{{ request.GET.date_to }}">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="search">Search</label>
+        <input type="text" name="search" id="search" class="form-control" placeholder="Search by ID, user name, or CNIC" value="{{ request.GET.search }}">
+      </div>
+      
+      <div class="mt-3">
+        <button type="submit" class="btn btn-primary">Apply Filters</button>
+        <a href="{% url 'ticket_list' %}" class="btn btn-outline">Clear Filters</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Tickets List -->
+<div class="card mt-4">
+  <div class="card-header">
+    <div>Tickets ({{ page_obj.paginator.count }})</div>
+    <div class="export-btns">
+      <a href="#" class="btn btn-outline btn-sm">
+        <i class="fas fa-file-csv"></i> Export to CSV
+      </a>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Ticket ID</th>
+            <th>User</th>
+            <th>CNIC</th>
+            <th>Type</th>
+            <th>Price</th>
+            <th>Status</th>
+            <th>Registered By</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ticket in page_obj %}
+          <tr>
+            <td title="{{ ticket.ticket_id }}">{{ ticket.ticket_id|truncatechars:10 }}</td>
+            <td>{{ ticket.user.full_name }}</td>
+            <td>{{ ticket.user.cnic_number }}</td>
+            <td>{{ ticket.get_ticket_type_display }}</td>
+            <td>PKR {{ ticket.price }}</td>
+            <td>
+              <span class="status-badge {{ ticket.get_status_display_class }}">
+                {{ ticket.get_status_display }}
+              </span>
+            </td>
+            <td>
+              {% if ticket.created_by and ticket.created_by.operator_profile %}
+                {{ ticket.created_by.operator_profile.name }}
+              {% else %}
+                {% if ticket.created_by and ticket.created_by.is_staff %}
+                  Admin
+                {% else %}
+                  {% if ticket.user.registered_by %}
+                    {{ ticket.user.registered_by.name }}
+                  {% else %}
+                    Unknown
+                  {% endif %}
+                {% endif %}
+              {% endif %}
+            </td>
+            <td>{{ ticket.created_at|date:"M d, Y" }}</td>
+            <td>
+              <div class="btn-group">
+                <a href="{% url 'ticket_detail' ticket_id=ticket.ticket_id %}" class="btn btn-icon btn-outline" title="View details">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{% url 'print_ticket' ticket_id=ticket.ticket_id %}" class="btn btn-icon btn-outline" title="Print ticket">
+                  <i class="fas fa-print"></i>
+                </a>
+                <button type="button" class="btn btn-icon btn-outline delete-ticket text-danger" 
+                        data-id="{{ ticket.ticket_id }}" 
+                        data-name="{{ ticket.user.full_name }}"
+                        data-type="{{ ticket.get_ticket_type_display }}"
+                        title="Delete ticket">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="9" class="text-center">No tickets found</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+      {% if page_obj.has_previous %}
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1" class="pagination-item">&laquo; first</a>
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}" class="pagination-item">&lsaquo; prev</a>
+      {% endif %}
+      
+      {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+          <span class="pagination-item active">{{ num }}</span>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+          <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}" class="pagination-item">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+      
+      {% if page_obj.has_next %}
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}" class="pagination-item">next &rsaquo;</a>
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.paginator.num_pages }}" class="pagination-item">last &raquo;</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Handle delete ticket buttons
+    const deleteButtons = document.querySelectorAll('.delete-ticket');
+    
+    deleteButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const ticketId = this.dataset.id;
+        const userName = this.dataset.name;
+        const ticketType = this.dataset.type;
+        
+        if (confirm(`Are you sure you want to delete the ${ticketType} ticket for ${userName}? This action cannot be undone.`)) {
+          // Create and submit a form for deletion
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = `/ticket/${ticketId}/delete/`;
+          
+          // Add CSRF token
+          const csrfInput = document.createElement('input');
+          csrfInput.type = 'hidden';
+          csrfInput.name = 'csrfmiddlewaretoken';
+          csrfInput.value = '{{ csrf_token }}';
+          form.appendChild(csrfInput);
+          
+          // Submit the form
+          document.body.appendChild(form);
+          form.submit();
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}
+
+{% endblock %}

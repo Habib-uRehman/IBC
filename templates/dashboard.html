@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard - Event Dashboard{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Set Chart.js default options for all charts
+    Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif";
+    Chart.defaults.font.size = 12;
+    Chart.defaults.color = '#6b7280';
+    Chart.defaults.plugins.legend.position = 'bottom';
+    Chart.defaults.plugins.title.display = false;
+    Chart.defaults.elements.arc.borderWidth = 1;
+    Chart.defaults.elements.arc.borderColor = '#fff';
+    Chart.defaults.elements.line.borderWidth = 2;
+    Chart.defaults.elements.line.tension = 0.3;
+    Chart.defaults.elements.point.radius = 3;
+    Chart.defaults.elements.point.hoverRadius = 4;
+    
+    // Responsive configs
+    const chartOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: {
+        padding: {
+          top: 10,
+          right: 20,
+          bottom: 10,
+          left: 20
+        }
+      }
+    };
+    
+    // Gender distribution chart
+    const genderCtx = document.getElementById('gender-chart').getContext('2d');
+    const genderChart = new Chart(genderCtx, {
+      type: 'pie',
+      data: {
+        labels: ['Male', 'Female'],
+        datasets: [{
+          data: [{{ stats.male_tickets }}, {{ stats.female_tickets }}],
+          backgroundColor: [
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(255, 99, 132, 0.8)'
+          ],
+          borderColor: [
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 99, 132, 1)'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        ...chartOptions,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              padding: 20,
+              usePointStyle: true,
+              boxWidth: 10
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                let label = context.label || '';
+                let value = context.raw || 0;
+                let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                let percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+    
+    // Ticket sales trend chart
+    const ticketSalesCtx = document.getElementById('ticket-sales-chart').getContext('2d');
+    const ticketSalesData = {
+      labels: Object.keys({{ stats.daily_registrations|safe }}),
+      datasets: [{
+        label: 'Tickets Sold',
+        data: Object.values({{ stats.daily_registrations|safe }}),
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 2,
+        tension: 0.3,
+        fill: true
+      }]
+    };
+    
+    const ticketSalesChart = new Chart(ticketSalesCtx, {
+      type: 'line',
+      data: ticketSalesData,
+      options: {
+        ...chartOptions,
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)'
+            },
+            ticks: {
+              precision: 0
+            }
+          },
+          x: {
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)'
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              title: function(tooltipItems) {
+                return tooltipItems[0].label;
+              },
+              label: function(context) {
+                return `Tickets: ${context.raw}`;
+              }
+            }
+          }
+        }
+      }
+    });
+    
+    // Handle date range changes
+    const dateRangeSelect = document.getElementById('date-range-select');
+    if (dateRangeSelect) {
+      dateRangeSelect.addEventListener('change', function() {
+        // Here you would fetch new data based on selected range
+        // For now, we'll just simulate a data update
+        const days = parseInt(this.value);
+        
+        // You would fetch this data from the server in a real implementation
+        // This is just a placeholder to show the behavior
+        fetch(`/api/sales-data?days=${days}`)
+          .then(response => response.json())
+          .then(data => {
+            // Update chart data
+            ticketSalesChart.data.labels = data.labels;
+            ticketSalesChart.data.datasets[0].data = data.values;
+            ticketSalesChart.update();
+          })
+          .catch(error => {
+            console.error('Error fetching data:', error);
+          });
+      });
+    }
+  });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="header">
+  <div class="header-title">Dashboard</div>
+  <div class="user-info">
+    <img src="{% static 'images/user.png' %}" alt="User">
+    <span>{{ request.user.username }}</span>
+  </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Total Users</div>
+        <div class="stat-card-value">{{ stats.total_users }}</div>
+        <div class="stat-card-trend">↑ 12% this week</div>
+      </div>
+      <i class="fas fa-users fa-lg" style="color: #64748b;"></i>
+    </div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Total Tickets</div>
+        <div class="stat-card-value">{{ stats.total_tickets }}</div>
+        <div class="stat-card-trend">↑ 8% this week</div>
+      </div>
+      <i class="fas fa-ticket-alt fa-lg" style="color: #64748b;"></i>
+    </div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Scanned Tickets</div>
+        <div class="stat-card-value">{{ stats.scanned_tickets }}</div>
+        <div class="stat-card-trend">↑ 15% this week</div>
+      </div>
+      <i class="fas fa-qrcode fa-lg" style="color: #64748b;"></i>
+    </div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Male Tickets</div>
+        <div class="stat-card-value">{{ stats.male_tickets }}</div>
+        <div class="stat-card-trend">↑ 10% this week</div>
+      </div>
+      <i class="fas fa-male fa-lg" style="color: #64748b;"></i>
+    </div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Female Tickets</div>
+        <div class="stat-card-value">{{ stats.female_tickets }}</div>
+        <div class="stat-card-trend">↑ 4% this week</div>
+      </div>
+      <i class="fas fa-female fa-lg" style="color: #64748b;"></i>
+    </div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Sold Tickets</div>
+        <div class="stat-card-value">{{ stats.total_tickets }}</div>
+        <div class="stat-card-trend">↑ 20% this week</div>
+      </div>
+      <i class="fas fa-money-bill fa-lg" style="color: #64748b;"></i>
+    </div>
+  </div>
+</div>
+
+
+<!-- Charts -->
+<div class="grid-50-50">
+  <div class="card">
+    <div class="card-header">
+      <div>Gender Distribution</div>
+    </div>
+    <div class="card-body">
+      <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+        <canvas id="gender-chart"></canvas>
+      </div>
+    </div>
+  </div>
+  
+  <div class="card">
+    <div class="card-header">
+      <div>Ticket Sales Trend</div>
+      <div>
+        <select class="form-control" id="date-range-select" style="width: auto;">
+          <option value="7">Last 7 days</option>
+          <option value="30">Last 30 days</option>
+          <option value="90">Last 90 days</option>
+        </select>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+        <canvas id="ticket-sales-chart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Recent Activity -->
+<div class="grid-50-50">
+  <div class="card">
+    <div class="card-header">
+      <div>Recent Activity</div>
+      <a href="#" class="btn btn-outline btn-sm">View All</a>
+    </div>
+    <div class="card-body">
+      {% for scan in stats.recent_scans|slice:":3" %}
+      <div style="margin-bottom: 15px;">
+        <div class="d-flex justify-between">
+          <div><i class="fas fa-qrcode"></i> <strong>Ticket scanned</strong></div>
+          <div style="color: var(--text-light); font-size: 14px;">{{ scan.scanned_at|timesince }} ago</div>
+        </div>
+        <div>{{ scan.ticket.user.full_name }} at {{ scan.get_gate_display }}</div>
+      </div>
+      {% empty %}
+      <p>No recent activity.</p>
+      {% endfor %}
+    </div>
+  </div>
+  
+  <div class="card">
+    <div class="card-header">
+      <div>Quick Actions</div>
+    </div>
+    <div class="card-body">
+      <a href="{% url 'register_user' %}" class="btn btn-primary w-100 mb-4">
+        <i class="fas fa-user-plus"></i> Register User
+      </a>
+      <a href="{% url 'scan_monitor' %}" class="btn btn-primary w-100 mb-4">
+        <i class="fas fa-qrcode"></i> Scan Monitor
+      </a>
+      <a href="{% url 'ticket_stats' %}" class="btn btn-primary w-100 mb-4">
+        <i class="fas fa-chart-bar"></i> View Statistics
+      </a>
+      <a href="{% url 'generate_report' %}" class="btn btn-primary w-100">
+        <i class="fas fa-download"></i> Download Report
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Latest Registered Users -->
+<div class="card">
+  <div class="card-header">
+    <div>Latest Registered Users</div>
+    <a href="{% url 'users_list' %}" class="btn btn-outline btn-sm">View All Users</a>
+  </div>
+  <div class="card-body">
+    <table>
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Gender</th>
+          <th>Ticket ID</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in stats.recent_users %}
+        {% with ticket=user.tickets.first %}
+        {% if ticket %}
+        <tr>
+          <td>{{ user.full_name }}</td>
+          <td>{{ user.get_gender_display }}</td>
+          <td>{{ ticket.ticket_id|truncatechars:8 }}</td>
+          <td><span class="status-badge {{ ticket.get_status_display_class }}">{{ ticket.get_status_display }}</span></td>
+          <td>{{ ticket.created_at|date:"M d, Y" }}</td>
+          <td><a href="{% url 'ticket_detail' ticket_id=ticket.ticket_id %}" class="btn btn-icon btn-outline"><i class="fas fa-eye"></i></a></td>
+        </tr>
+        {% endif %}
+        {% endwith %}
+        {% empty %}
+        <tr>
+          <td colspan="6">No users registered yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+

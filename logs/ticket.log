@@ -1,0 +1,106 @@
+INFO 2025-04-20 12:35:02,426 views Processing register_user POST request
+INFO 2025-04-20 12:35:02,426 views POST data: <QueryDict: {'csrfmiddlewaretoken': ['GdHPnIJBB7ogVDlM8cSNfimeXsz4es7L3PplpVG2L8GIEjC8VIcl9HEMdqaa9Hrm'], 'full_name': ['Habib Ur Rehman'], 'father_name': ['Rehman'], 'email': ['habib.rehman0088@gmail.com'], 'phone_number': ['03089264072'], 'cnic_number': ['5440040305252'], 'relationship': ['self'], 'related_to': [''], 'gender': ['male'], 'age': ['21']}>
+INFO 2025-04-20 12:35:02,427 views FILES data: <MultiValueDict: {'profile_picture': [<InMemoryUploadedFile: 74961375_165540081314145_224505242006323200_n.jpg (image/jpeg)>]}>
+INFO 2025-04-20 12:35:02,428 views Content type: multipart/form-data
+INFO 2025-04-20 12:35:02,428 views Profile picture provided: 74961375_165540081314145_224505242006323200_n.jpg, size: 153883, type: image/jpeg
+INFO 2025-04-20 12:35:02,431 views Processing uploaded file: 74961375_165540081314145_224505242006323200_n.jpg, size: 153883, content_type: image/jpeg
+INFO 2025-04-20 12:35:02,438 views User registered successfully: e43aa121-f069-454f-9a6a-be97b2e1c9fb
+INFO 2025-04-20 12:35:41,241 views Processing register_user POST request
+INFO 2025-04-20 12:35:41,242 views POST data: <QueryDict: {'csrfmiddlewaretoken': ['bjsMAbSOwXubIfc2toMGXzRNOEr2Hqh8yVaiCoPfGYMDrVtogU6eRY9l4C28CFBJ'], 'full_name': ['Islam'], 'father_name': ['Rehman'], 'email': ['habib.rehman0088@gmail.com'], 'phone_number': ['03089264072'], 'cnic_number': ['5440040305252'], 'relationship': ['child'], 'related_to': ['5440040305252'], 'gender': ['male'], 'age': ['18']}>
+INFO 2025-04-20 12:35:41,242 views FILES data: <MultiValueDict: {'profile_picture': [<InMemoryUploadedFile: C360_2019-10-13-20-39-39-711.jpg (image/jpeg)>]}>
+INFO 2025-04-20 12:35:41,243 views Content type: multipart/form-data
+INFO 2025-04-20 12:35:41,243 views Profile picture provided: C360_2019-10-13-20-39-39-711.jpg, size: 756283, type: image/jpeg
+ERROR 2025-04-20 12:35:41,245 views Error registering user: ticket/user_register.html
+INFO 2025-04-20 12:36:24,896 views Processing register_user POST request
+INFO 2025-04-20 12:36:24,897 views POST data: <QueryDict: {'csrfmiddlewaretoken': ['JhdpOmdfp5yn0n1d04ryTyBUMqz76bnK6TVVQzaGz6QPJ3izNAL6NXTs2oad1qHl'], 'full_name': ['Islam'], 'father_name': ['Rehman'], 'email': ['islam.rehman0088@gmail.com'], 'phone_number': ['03089264072'], 'cnic_number': ['5440040305252'], 'relationship': ['child'], 'related_to': ['5440040305252'], 'gender': ['male'], 'age': ['18']}>
+INFO 2025-04-20 12:36:24,898 views FILES data: <MultiValueDict: {'profile_picture': [<InMemoryUploadedFile: C360_2019-10-13-20-39-39-711.jpg (image/jpeg)>]}>
+INFO 2025-04-20 12:36:24,898 views Content type: multipart/form-data
+INFO 2025-04-20 12:36:24,899 views Profile picture provided: C360_2019-10-13-20-39-39-711.jpg, size: 756283, type: image/jpeg
+ERROR 2025-04-20 12:36:24,902 views Error registering user: ticket/user_register.html
+INFO 2025-04-20 12:36:37,005 views Processing register_user POST request
+INFO 2025-04-20 12:36:37,005 views POST data: <QueryDict: {'csrfmiddlewaretoken': ['JhdpOmdfp5yn0n1d04ryTyBUMqz76bnK6TVVQzaGz6QPJ3izNAL6NXTs2oad1qHl'], 'full_name': ['Islam'], 'father_name': ['Rehman'], 'email': ['islam.rehman0088@gmail.com'], 'phone_number': ['03089264072'], 'cnic_number': ['5440040305252'], 'relationship': ['child'], 'related_to': ['5440040305252'], 'gender': ['male'], 'age': ['18']}>
+INFO 2025-04-20 12:36:37,006 views FILES data: <MultiValueDict: {'profile_picture': [<InMemoryUploadedFile: C360_2019-10-13-20-39-39-711.jpg (image/jpeg)>]}>
+INFO 2025-04-20 12:36:37,007 views Content type: multipart/form-data
+INFO 2025-04-20 12:36:37,007 views Profile picture provided: C360_2019-10-13-20-39-39-711.jpg, size: 756283, type: image/jpeg
+ERROR 2025-04-20 12:36:37,009 views Error registering user: ticket/user_register.html
+INFO 2025-04-20 12:39:41,859 views Processing register_user POST request
+INFO 2025-04-20 12:39:41,859 views POST data: <QueryDict: {'csrfmiddlewaretoken': ['haw38NMHWycSUyOnzCVKWaWJAFngAOGZEMeza0J86zukDe5Jm8fiQzehQDYmv30A'], 'full_name': ['Islam'], 'father_name': ['Rehman'], 'email': ['islam.rehman0088@gmail.com'], 'phone_number': ['03089264072'], 'cnic_number': ['5440040305252'], 'relationship': ['child'], 'related_to': ['5440040305252'], 'gender': ['male'], 'age': ['18']}>
+INFO 2025-04-20 12:39:41,860 views FILES data: <MultiValueDict: {'profile_picture': [<InMemoryUploadedFile: C360_2019-10-13-20-39-39-711.jpg (image/jpeg)>]}>
+INFO 2025-04-20 12:39:41,861 views Content type: multipart/form-data
+INFO 2025-04-20 12:39:41,861 views Profile picture provided: C360_2019-10-13-20-39-39-711.jpg, size: 756283, type: image/jpeg
+INFO 2025-04-20 12:39:41,862 views Processing uploaded file: C360_2019-10-13-20-39-39-711.jpg, size: 756283, content_type: image/jpeg
+INFO 2025-04-20 12:39:41,868 views User registered successfully: 00715cf6-22ab-4d84-b78a-204e24210859
+INFO 2025-04-20 12:44:44,659 views Scan data received: T:a16e1535-4908-472f-ad3c-1382e5d2c2c6
+INFO 2025-04-20 12:44:44,660 views Processing scan for ticket ID: a16e1535-4908-472f-ad3c-1382e5d2c2c6
+INFO 2025-04-20 12:45:28,359 views Scan data received: T:f43db43c-612e-4500-95ea-eb4ac750b9a8
+INFO 2025-04-20 12:45:28,365 views Processing scan for ticket ID: f43db43c-612e-4500-95ea-eb4ac750b9a8
+INFO 2025-04-20 21:23:24,982 views Scan data received: T:f43db43c-612e-4500-95ea-eb4ac750b9a8
+INFO 2025-04-20 21:23:24,997 views Processing scan for ticket ID: f43db43c-612e-4500-95ea-eb4ac750b9a8
+INFO 2025-04-20 21:23:41,971 views Scan data received: T:f43db43c-612e-4500-95ea-eb4ac750b9a8
+INFO 2025-04-20 21:23:41,980 views Processing scan for ticket ID: f43db43c-612e-4500-95ea-eb4ac750b9a8
+INFO 2025-04-20 21:27:26,222 views Scan data received: T:f43db43c-612e-4500-95ea-eb4ac750b9a8
+INFO 2025-04-20 21:27:26,222 views Processing scan for ticket ID: f43db43c-612e-4500-95ea-eb4ac750b9a8
+INFO 2025-04-20 22:07:14,360 views Processing register_user POST request
+INFO 2025-04-20 22:07:14,362 views POST data: <QueryDict: {'csrfmiddlewaretoken': ['HuCujGjYu67W7P8fQJyuVRO8em6dyhIY46k0lTgpE7poQvpBDfS2Pg6GukHjtw2z'], 'full_name': ['Rizwan'], 'father_name': ['abdullah'], 'email': ['rizwan@gmail.com'], 'phone_number': ['01234567722'], 'cnic_number': ['5440040305333'], 'relationship': ['self'], 'related_to': [''], 'gender': ['male'], 'age': ['21']}>
+INFO 2025-04-20 22:07:14,363 views FILES data: <MultiValueDict: {'profile_picture': [<InMemoryUploadedFile: 1727583569530.jfif (image/jpeg)>]}>
+INFO 2025-04-20 22:07:14,367 views Content type: multipart/form-data
+INFO 2025-04-20 22:07:14,369 views Profile picture provided: 1727583569530.jfif, size: 100179, type: image/jpeg
+INFO 2025-04-20 22:07:14,374 views Processing uploaded file: 1727583569530.jfif, size: 100179, content_type: image/jpeg
+INFO 2025-04-20 22:07:14,381 views User registered successfully: a50b56ea-8bef-4e6e-b8b4-169b8846aa3b
+INFO 2025-04-20 22:11:13,857 views Scan data received: T:7efd5162-3413-4220-914c-0b9fd1c267a3
+INFO 2025-04-20 22:11:13,864 views Processing scan for ticket ID: 7efd5162-3413-4220-914c-0b9fd1c267a3
+INFO 2025-04-20 22:11:38,068 views Scan data received: T:7efd5162-3413-4220-914c-0b9fd1c267a3
+INFO 2025-04-20 22:11:38,070 views Processing scan for ticket ID: 7efd5162-3413-4220-914c-0b9fd1c267a3
+INFO 2025-04-20 22:11:45,647 views Scan data received: T:7efd5162-3413-4220-914c-0b9fd1c267a3
+INFO 2025-04-20 22:11:45,649 views Processing scan for ticket ID: 7efd5162-3413-4220-914c-0b9fd1c267a3
+INFO 2025-04-20 22:11:54,325 views Scan data received: Sultanat
+ERROR 2025-04-20 22:11:54,327 views Form validation error: {"ticket_id": [{"message": "Enter a valid UUID.", "code": ""}]}
+ERROR 2025-04-20 22:11:54,329 views Received ticket_id: Sultanat
+INFO 2025-04-20 22:16:20,248 views Scan data received: T:f43db43c-612e-4500-95ea-eb4ac750b9a8
+INFO 2025-04-20 22:16:20,252 views Processing scan for ticket ID: f43db43c-612e-4500-95ea-eb4ac750b9a8
+INFO 2025-04-20 23:46:50,746 views Scan data received: T:4e56aad1-7e51-42d5-835b-e7f56ff5aa20
+INFO 2025-04-20 23:46:50,747 views Processing scan for ticket ID: 4e56aad1-7e51-42d5-835b-e7f56ff5aa20
+INFO 2025-04-21 10:53:15,453 views Processing register_user POST request
+INFO 2025-04-21 10:53:15,455 views POST data: <QueryDict: {'csrfmiddlewaretoken': ['vWIRxeUwKU00evfIAaT1xZmg9HwJCkIEQDVfiuJIMnnCWPRFj8oUvxXhEkphZEco'], 'full_name': ['Mall user'], 'father_name': ['mall'], 'email': ['mall@gmail.com'], 'phone_number': ['02111140201'], 'cnic_number': ['54444030044444'], 'relationship': ['self'], 'related_to': [''], 'gender': ['male'], 'age': ['30'], 'profile_picture': ['']}>
+INFO 2025-04-21 10:53:15,461 views FILES data: <MultiValueDict: {}>
+INFO 2025-04-21 10:53:15,463 views Content type: multipart/form-data
+INFO 2025-04-21 10:53:15,467 views No profile picture provided
+INFO 2025-04-21 10:53:15,478 views User registered successfully: e4f1e25f-3878-4835-b87d-d5aceedd8e57
+INFO 2025-04-21 10:58:46,740 views Processing register_user POST request
+INFO 2025-04-21 10:58:46,740 views POST data: <QueryDict: {'csrfmiddlewaretoken': ['gCJbjrNJgQaymkvju7Mj8YGFZnzGTHFB0fAjA2Eq8lDP2sQtUcEDSTDgc4rCaw1q'], 'full_name': ['Jan Operator'], 'father_name': ['jan'], 'email': ['jan@gmail.com'], 'phone_number': ['0123454321234'], 'cnic_number': ['544004030511111'], 'relationship': ['self'], 'related_to': [''], 'gender': ['male'], 'age': ['21'], 'profile_picture': ['']}>
+INFO 2025-04-21 10:58:46,742 views FILES data: <MultiValueDict: {}>
+INFO 2025-04-21 10:58:46,743 views Content type: multipart/form-data
+INFO 2025-04-21 10:58:46,745 views No profile picture provided
+INFO 2025-04-21 10:58:46,762 views User registered successfully: 82027484-59cc-4701-8b1f-bcc39c2d893a
+INFO 2025-04-21 11:02:28,988 views Processing register_user POST request
+INFO 2025-04-21 11:02:28,989 views POST data: <QueryDict: {'csrfmiddlewaretoken': ['QG6EZvZYJmzxbYzUYEwWstyIgQrf9fwRAjXMg6QFBR2OR6U4oJogcovjtxjbq4SG'], 'full_name': ['Jan Mall User'], 'father_name': ['jan'], 'email': ['jan@gmail.com'], 'phone_number': ['311001306811'], 'cnic_number': ['54444030032222'], 'relationship': ['self'], 'related_to': [''], 'gender': ['male'], 'age': ['21'], 'profile_picture': ['']}>
+INFO 2025-04-21 11:02:28,994 views FILES data: <MultiValueDict: {}>
+INFO 2025-04-21 11:02:28,995 views Content type: multipart/form-data
+INFO 2025-04-21 11:02:29,002 views No profile picture provided
+INFO 2025-04-21 11:02:29,012 views User registered successfully: e5ebd067-7463-4d52-8e62-c9e2edb657f0
+INFO 2025-04-22 15:50:25,134 views Scan data received: d3e2a8b1-8f48-4707-8dc0-64dd7490fe85
+INFO 2025-04-22 15:50:25,591 views Processing scan for ticket ID: d3e2a8b1-8f48-4707-8dc0-64dd7490fe85
+INFO 2025-04-24 01:18:38,703 views Processing register_user POST request
+INFO 2025-04-24 01:18:38,703 views POST data: <QueryDict: {'csrfmiddlewaretoken': ['SwoQ42Ntoqaw4Bcn75wbPqQt4tAvCmoKjoyVK5lKGKZybVqR73WPnR0OctE18hcn'], 'full_name': ['Halim'], 'father_name': ['Dawood'], 'email': ['halim@gmail.com'], 'phone_number': ['0311000000000'], 'cnic_number': ['544004030521111'], 'relationship': ['self'], 'related_to': [''], 'gender': ['male'], 'age': ['21'], 'profile_picture': ['']}>
+INFO 2025-04-24 01:18:38,705 views FILES data: <MultiValueDict: {}>
+INFO 2025-04-24 01:18:38,705 views Content type: multipart/form-data
+INFO 2025-04-24 01:18:38,708 views No profile picture provided
+INFO 2025-04-24 01:18:38,719 views User registered successfully: 8c2e4f7d-4b61-41ca-868e-6657300e11ab
+INFO 2025-04-24 01:20:44,338 views Processing register_user POST request
+INFO 2025-04-24 01:20:44,351 views POST data: <QueryDict: {'csrfmiddlewaretoken': ['nLO0XyGrRvRkgExckMWPg2jviskHGWv3ODY5DBeI9PGmnYLGkKmtOttQqsodcRjG'], 'full_name': ['Fatma Zahra'], 'father_name': ['Abdullah'], 'email': ['fatma123@gmail.com'], 'phone_number': ['3110013022222'], 'cnic_number': ['544004030511111'], 'relationship': ['child'], 'related_to': ['544004030511111'], 'gender': ['female'], 'age': ['21'], 'profile_picture': ['']}>
+INFO 2025-04-24 01:20:44,356 views FILES data: <MultiValueDict: {}>
+INFO 2025-04-24 01:20:44,357 views Content type: multipart/form-data
+INFO 2025-04-24 01:20:44,648 views No profile picture provided
+INFO 2025-04-24 01:20:44,837 views User registered successfully: 13ba9df6-6fb5-417b-9f5e-efeeb7bd8f39
+INFO 2025-04-24 01:30:43,281 views Processing register_user POST request
+INFO 2025-04-24 01:30:43,295 views POST data: <QueryDict: {'csrfmiddlewaretoken': ['cxILKCOLZHyEp5KTM8qbX84744hmfJsoPt6rWQ4xrrpMIIWqyLMdPaxMFxzcSAck'], 'full_name': ['Haroon'], 'father_name': ['Abdullah'], 'email': ['haroon@gmail.com'], 'phone_number': ['0300000000000'], 'cnic_number': ['54400403053333'], 'relationship': ['self'], 'related_to': [''], 'gender': ['male'], 'age': ['21'], 'profile_picture': ['']}>
+INFO 2025-04-24 01:30:43,444 views FILES data: <MultiValueDict: {}>
+INFO 2025-04-24 01:30:43,574 views Content type: multipart/form-data
+INFO 2025-04-24 01:30:43,638 views No profile picture provided
+INFO 2025-04-24 01:30:43,806 views User registered successfully: 7e39c032-0a5c-4636-ac02-7f37560c9d23
+INFO 2025-04-24 01:36:12,000 views Processing register_user POST request
+INFO 2025-04-24 01:36:12,120 views POST data: <QueryDict: {'csrfmiddlewaretoken': ['Zx8SQJajjN5BvjQCMnhiCHgZOMMShZc0Ctwy2Xq5LxWJOW29y0DkuJJEpf4IUQWW'], 'full_name': ['Ghulam'], 'father_name': ['Abdullah'], 'email': ['ghulam@gmail.com'], 'phone_number': ['023456784'], 'cnic_number': ['54400403053333'], 'relationship': ['sibling'], 'related_to': ['54400403053333'], 'gender': ['male'], 'age': ['12'], 'profile_picture': ['']}>
+INFO 2025-04-24 01:36:12,304 views FILES data: <MultiValueDict: {}>
+INFO 2025-04-24 01:36:12,357 views Content type: multipart/form-data
+INFO 2025-04-24 01:36:12,423 views No profile picture provided
+INFO 2025-04-24 01:36:12,507 views User registered successfully: 835eabc1-ba5e-44e4-b1ed-1dedb98f33f3

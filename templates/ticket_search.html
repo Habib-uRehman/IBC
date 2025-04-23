@@ -1,0 +1,434 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Ticket Search & Verification{% endblock %}
+
+{% block extra_css %}
+<style>
+  .search-container {
+    max-width: 600px;
+    margin: 0 auto 30px;
+  }
+  
+  .ticket-details {
+    border-left: 4px solid var(--primary);
+    padding-left: 15px;
+  }
+  
+  .user-photo {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--primary-light);
+  }
+  
+  .scanner-area {
+    border: 2px dashed var(--primary-light);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .user-info-grid {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 20px;
+  }
+  
+  .scan-record {
+    border-bottom: 1px solid var(--border);
+    padding: 10px 0;
+  }
+  
+  .scan-record:last-child {
+    border-bottom: none;
+  }
+  
+  .related-ticket {
+    background-color: var(--background-light);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+  }
+  
+  .relationship-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+    margin-left: 8px;
+  }
+  
+  @media (max-width: 576px) {
+    .user-info-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .user-photo-container {
+      text-align: center;
+    }
+  }
+
+  .btn-danger {
+    background-color: #ef4444;
+    color: white;
+  }
+  
+  .btn-danger:hover {
+    background-color: #dc2626;
+  }
+  
+  .text-danger {
+    color: #ef4444;
+  }
+  
+  .text-danger:hover {
+    color: #dc2626;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 8px;
+    margin-left: 8px;
+  }
+  
+  .ml-2 {
+    margin-left: 8px;
+    margin-right: 8px;
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const scanForm = document.getElementById('scan-search-form');
+    const ticketIdField = document.getElementById('ticket_id');
+    
+    // Auto-focus on the ticket ID field on page load
+    if (ticketIdField) {
+      ticketIdField.focus();
+    }
+    
+    // Handle scanner auto-submit
+    if (ticketIdField) {
+      // Most scanners append a carriage return (Enter key) after scanning
+      ticketIdField.addEventListener('keypress', function(e) {
+        // Check if Enter key was pressed
+        if (e.key === 'Enter' && ticketIdField.value.trim() !== '') {
+          e.preventDefault(); // Prevent default form submission
+          scanForm.submit();
+        }
+      });
+    }
+    
+    // Debug section toggle
+    const debugBtn = document.getElementById('debug-scan');
+    const debugOutput = document.getElementById('scanner-debug-output');
+    
+    if (debugBtn && debugOutput && ticketIdField) {
+      debugBtn.addEventListener('click', function() {
+        // Toggle debug display
+        if (debugOutput.style.display === 'none') {
+          debugOutput.style.display = 'block';
+          debugBtn.textContent = 'Hide Debug Info';
+          
+          // Set up listener for scanner input
+          ticketIdField.addEventListener('input', function() {
+            const input = ticketIdField.value;
+            debugOutput.innerHTML = `
+              <strong>Raw input:</strong> ${input}<br>
+              <strong>Length:</strong> ${input.length}<br>
+              <strong>Char codes:</strong> ${Array.from(input).map(c => c.charCodeAt(0)).join(', ')}<br>
+              <strong>Hex:</strong> ${Array.from(input).map(c => c.charCodeAt(0).toString(16)).join(' ')}
+            `;
+          });
+        } else {
+          debugOutput.style.display = 'none';
+          debugBtn.textContent = 'Debug Scanner';
+        }
+      });
+    }
+  });
+
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Handle delete ticket buttons
+    const deleteButtons = document.querySelectorAll('.delete-ticket');
+    
+    deleteButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const ticketId = this.dataset.id;
+        const userName = this.dataset.name;
+        const ticketType = this.dataset.type;
+        
+        if (confirm(`Are you sure you want to delete the ${ticketType} ticket for ${userName}? This action cannot be undone.`)) {
+          // Create and submit a form for deletion
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = `/ticket/${ticketId}/delete/`;
+          
+          // Add CSRF token
+          const csrfInput = document.createElement('input');
+          csrfInput.type = 'hidden';
+          csrfInput.name = 'csrfmiddlewaretoken';
+          csrfInput.value = '{{ csrf_token }}';
+          form.appendChild(csrfInput);
+          
+          // Submit the form
+          document.body.appendChild(form);
+          form.submit();
+        }
+      });
+    });
+  });
+
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="header">
+  <div class="header-title">Ticket Search & Verification</div>
+  <div class="user-info">
+    <img src="{% static 'images/user.png' %}" alt="User">
+    <span>{{ request.user.username }}</span>
+  </div>
+</div>
+
+{% if messages %}
+<div class="messages">
+  {% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %}">
+      {{ message }}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="card-body" style="margin-bottom: 20px;">
+  <p>Search for ticket information by scanning QR code or entering ticket ID</p>
+</div>
+
+<!-- Search Form -->
+<div class="card">
+  <div class="card-header">
+    <div>Scan or Search</div>
+  </div>
+  <div class="card-body">
+    <div class="search-container">
+      <div class="scanner-area">
+        <i class="fas fa-qrcode fa-3x mb-3" style="color: var(--primary);"></i>
+        <h3>Scan Ticket QR Code</h3>
+        <p class="text-muted">Position the QR code in front of the scanner</p>
+      </div>
+      
+      <form id="scan-search-form" method="POST" action="{% url 'ticket_search' %}">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="ticket_id">Ticket ID:</label>
+          <input type="text" id="ticket_id" name="ticket_id" class="form-control" 
+                placeholder="Scan QR code or enter ticket ID manually" autofocus>
+        </div>
+        
+        <div class="d-flex justify-between align-center">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-search"></i> Search
+          </button>
+          
+          <button type="button" id="debug-scan" class="btn btn-outline">
+            <i class="fas fa-bug"></i> Debug Scanner
+          </button>
+        </div>
+      </form>
+      
+      <div id="scanner-debug-output" class="mt-4 p-3 bg-light" style="display: none; font-family: monospace; border-radius: 4px;">
+        Scanner output will appear here
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if search_performed %}
+  {% if ticket %}
+    <!-- Ticket Information -->
+    <div class="card mt-4">
+      <div class="card-header">
+        <div class="d-flex justify-between align-center">
+          <div>Ticket Information</div>
+          <div class="button-group">
+            <a href="{% url 'print_ticket' ticket_id=ticket.ticket_id %}" class="btn btn-outline btn-sm">
+              <i class="fas fa-print"></i> Print
+            </a>
+            <button type="button" class="btn btn-outline btn-sm delete-ticket text-danger ml-2" 
+                    data-id="{{ ticket.ticket_id }}" 
+                    data-name="{{ user.full_name }}"
+                    data-type="{{ ticket.get_ticket_type_display }}">
+              <i class="fas fa-trash"></i> Delete
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="user-info-grid">
+          <div class="user-photo-container">
+            {% if user.profile_picture %}
+              <img src="{{ user.profile_picture.url }}" alt="{{ user.full_name }}" class="user-photo">
+            {% else %}
+              <div class="user-photo" style="background-color: var(--primary-light); display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-user fa-3x" style="color: var(--primary);"></i>
+              </div>
+            {% endif %}
+          </div>
+          
+          <div class="ticket-details">
+            <h2>{{ user.full_name }}
+              {% if user.relationship != 'self' %}
+                <span class="relationship-badge">{{ user.get_relationship_display }}</span>
+              {% endif %}
+            </h2>
+            
+            <table class="table" style="margin-top: 15px;">
+              <tr>
+                <th style="width: 140px;">Ticket ID:</th>
+                <td>{{ ticket.ticket_id }}</td>
+              </tr>
+              <tr>
+                <th>Ticket Type:</th>
+                <td>{{ ticket.get_ticket_type_display }}</td>
+              </tr>
+              <tr>
+                <th>Status:</th>
+                <td>
+                  <span class="status-badge {{ ticket.get_status_display_class }}">
+                    {{ ticket.get_status_display }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <th>Price:</th>
+                <td>PKR {{ ticket.price }}</td>
+              </tr>
+              <tr>
+                <th>CNIC:</th>
+                <td>{{ user.cnic_number }}</td>
+              </tr>
+              <tr>
+                <th>Father's Name:</th>
+                <td>{{ user.father_name|default:"Not provided" }}</td>
+              </tr>
+              <tr>
+                <th>Gender:</th>
+                <td>{{ user.get_gender_display }}</td>
+              </tr>
+              <tr>
+                <th>Age:</th>
+                <td>{{ user.age|default:"Not provided" }}</td>
+              </tr>
+              <tr>
+                <th>Phone:</th>
+                <td>{{ user.phone_number }}</td>
+              </tr>
+              <tr>
+                <th>Email:</th>
+                <td>{{ user.email }}</td>
+              </tr>
+              {% if user.relationship != 'self' and user.related_to %}
+              <tr>
+                <th>Related To:</th>
+                <td>{{ user.related_to }}</td>
+              </tr>
+              {% endif %}
+              <tr>
+                <th>Created On:</th>
+                <td>{{ ticket.created_at|date:"M d, Y H:i" }}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Scan History -->
+    <div class="card mt-4">
+      <div class="card-header">
+        <div>Scan History</div>
+      </div>
+      <div class="card-body">
+        {% if scan_logs %}
+          {% for log in scan_logs %}
+            <div class="scan-record">
+              <div class="d-flex justify-between">
+                <div>
+                  <i class="fas fa-check-circle" style="color: {% if log.gate == 'gate1' %}#4f46e5{% else %}#10b981{% endif %};"></i>
+                  <strong>{{ log.get_gate_display }}</strong>
+                </div>
+                <div>{{ log.scanned_at|date:"M d, Y H:i:s" }}</div>
+              </div>
+              {% if log.notes %}
+                <div class="mt-2">
+                  <small class="text-muted">Notes: {{ log.notes }}</small>
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        {% else %}
+          <p>No scan records found for this ticket.</p>
+        {% endif %}
+      </div>
+    </div>
+    
+    <!-- Related Tickets -->
+    {% if related_tickets %}
+      <div class="card mt-4">
+        <div class="card-header">
+          <div>Related Tickets</div>
+        </div>
+        <div class="card-body">
+          {% for related_ticket in related_tickets %}
+            <div class="related-ticket">
+              <div class="d-flex justify-between align-center">
+                <div>
+                  <h4>{{ related_ticket.user.full_name }}
+                    {% if related_ticket.user.relationship != 'self' %}
+                      <span class="relationship-badge">{{ related_ticket.user.get_relationship_display }}</span>
+                    {% endif %}
+                  </h4>
+                  <div class="text-muted">Ticket ID: {{ related_ticket.ticket_id|truncatechars:12 }}</div>
+                </div>
+                <div>
+                  <span class="status-badge {{ related_ticket.get_status_display_class }}">
+                    {{ related_ticket.get_status_display }}
+                  </span>
+                </div>
+              </div>
+              <div class="mt-3 d-flex justify-between">
+                <div>
+                  <small>{{ related_ticket.get_ticket_type_display }} - PKR {{ related_ticket.price }}</small>
+                </div>
+                <div>
+                  <a href="{% url 'ticket_search' %}?ticket_id={{ related_ticket.ticket_id }}" class="btn btn-sm btn-outline">
+                    <i class="fas fa-info-circle"></i> Details
+                  </a>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  {% elif search_performed %}
+    <!-- No Results -->
+    <div class="card mt-4">
+      <div class="card-body text-center">
+        <i class="fas fa-search fa-3x mb-3" style="color: var(--text-light);"></i>
+        <h3>No Results Found</h3>
+        <p>No ticket was found with the provided ID. Please check the ID and try again.</p>
+      </div>
+    </div>
+  {% endif %}
+{% endif %}
+{% endblock %}

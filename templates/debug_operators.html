@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Ticket Operator Debug Information</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Ticket ID</th>
+            <th>Created By Username</th>
+            <th>Created By Has Operator?</th>
+            <th>User Name</th>
+            <th>User Has Registered By?</th>
+            <th>User Registered By</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for info in debug_info %}
+        <tr>
+            <td>{{ info.ticket_id }}</td>
+            <td>{{ info.created_by_username }}</td>
+            <td>{{ info.created_by_has_operator }}</td>
+            <td>{{ info.user_name }}</td>
+            <td>{{ info.user_has_registered_by }}</td>
+            <td>{{ info.user_registered_by }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

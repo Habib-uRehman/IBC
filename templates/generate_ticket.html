@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Generate Ticket - Event Dashboard{% endblock %}
+
+{% block content %}
+<div class="header">
+  <div class="header-title">Generate Ticket</div>
+  <div class="user-info">
+    <img src="{% static 'images/user.png' %}" alt="User">
+    <span>{{ request.user.username }}</span>
+  </div>
+</div>
+
+{% if messages %}
+<div class="messages">
+  {% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %}">
+      {{ message }}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="card-body" style="margin-bottom: 20px;">
+  <p>Create digital ticket for registered user</p>
+</div>
+
+<div class="grid-50-50">
+  <!-- User Details -->
+  <div class="card">
+    <div class="card-header">
+      <div>User Details</div>
+    </div>
+    <div class="card-body">
+      <div class="d-flex align-center mb-4">
+        <img src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'images/user.png' %}{% endif %}" alt="User" style="border-radius: 50%; margin-right: 15px; width: 60px; height: 60px;">
+        <div>
+          <h3 style="margin: 0 0 5px 0;">{{ user.full_name }}</h3>
+          <p style="margin: 0; color: var(--text-light);">{{ user.email }}</p>
+        </div>
+      </div>
+      
+      <div class="grid-50-50">
+        <div>
+          <div style="color: var(--text-light); font-size: 14px;">Gender</div>
+          <div>{{ user.get_gender_display }}</div>
+        </div>
+        
+        <div>
+          <div style="color: var(--text-light); font-size: 14px;">Age</div>
+          <div>{{ user.age|default:"Not provided" }}</div>
+        </div>
+      </div>
+      
+      <div class="grid-50-50 mt-4">
+        <div>
+          <div style="color: var(--text-light); font-size: 14px;">Phone</div>
+          <div>{{ user.phone_number }}</div>
+        </div>
+        
+        <div>
+          <div style="color: var(--text-light); font-size: 14px;">ID</div>
+          <div>{{ user.user_id|truncatechars:8 }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Ticket Form -->
+  <div class="card">
+    <div class="card-header">
+      <div>Ticket Information</div>
+    </div>
+    <div class="card-body">
+      <form method="POST">
+        {% csrf_token %}
+        
+        <div class="form-group">
+          <label for="{{ form.ticket_type.id_for_label }}" class="form-label">Ticket Type</label>
+          {{ form.ticket_type }}
+        </div>
+        
+        <div class="ticket-price-info">
+          <h4>Ticket Prices:</h4>
+          <ul>
+            <li>Gwader End: PKR 4,000</li>
+            <li>Chaman End: PKR 3,000</li>
+          </ul>
+        </div>
+        
+        <button type="submit" class="btn btn-primary w-100 mt-4">Generate Ticket</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% if user.tickets.exists %}
+<div class="card mt-4">
+  <div class="card-header">
+    <div>Previously Generated Tickets</div>
+  </div>
+  <div class="card-body">
+    <table>
+      <thead>
+        <tr>
+          <th>Ticket ID</th>
+          <th>Type</th>
+          <th>Price</th>
+          <th>Status</th>
+          <th>Generated On</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ticket in user.tickets.all %}
+        <tr>
+          <td>{{ ticket.ticket_id|truncatechars:8 }}</td>
+          <td>{{ ticket.get_ticket_type_display }}</td>
+          <td>PKR {{ ticket.price }}</td>
+          <td><span class="status-badge {{ ticket.get_status_display_class }}">{{ ticket.get_status_display }}</span></td>
+          <td>{{ ticket.created_at|date:"M d, Y H:i" }}</td>
+          <td>
+            <a href="{% url 'ticket_detail' ticket_id=ticket.ticket_id %}" class="btn btn-icon btn-outline"><i class="fas fa-eye"></i></a>
+            <a href="{% url 'print_ticket' ticket_id=ticket.ticket_id %}" class="btn btn-icon btn-outline"><i class="fas fa-print"></i></a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

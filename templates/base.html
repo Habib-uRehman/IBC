@@ -1,0 +1,144 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Event Ticketing System{% endblock %}</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" href="{% static 'images/favicon.ico' %}">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+  <link rel="stylesheet" href="{% static 'css/charts.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <header class="top-nav">
+  <div class="nav-content">
+    {% if request.user.is_authenticated %}
+      <span class="welcome-text">Welcome, {{ request.user.username }}!</span>
+      <a href="{% url 'logout' %}" class="btn logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    {% else %}
+      <a href="{% url 'login' %}" class="btn login-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
+    {% endif %}
+  </div>
+</header>
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo">
+        <h2>IBC Event</h2>
+      </div>
+      
+      <!-- Render different menu based on user role -->
+      {% if request.user.is_authenticated %}
+        {% if request.user.is_staff or request.user.is_superuser %}
+          <!-- Admin Menu -->
+          <ul class="sidebar-menu">
+            <li><a href="{% url 'admin_dashboard' %}" class="{% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+              <i class="fas fa-tachometer-alt"></i> Admin Dashboard
+            </a></li>
+            <li><a href="{% url 'users_list' %}" class="{% if request.resolver_match.url_name == 'users_list' %}active{% endif %}">
+              <i class="fas fa-users"></i> All Users
+            </a></li>
+            <li><a href="{% url 'ticket_list' %}" class="{% if request.resolver_match.url_name == 'ticket_list' %}active{% endif %}">
+              <i class="fas fa-ticket-alt"></i> All Tickets
+            </a></li>
+            <li><a href="{% url 'quota_management' %}" class="{% if request.resolver_match.url_name == 'quota_management' %}active{% endif %}">
+              <i class="fas fa-chart-pie"></i> Quota Management
+            </a></li>
+            <li><a href="{% url 'scan_monitor' %}" class="{% if request.resolver_match.url_name == 'scan_monitor' %}active{% endif %}">
+              <i class="fas fa-qrcode"></i> Scan Monitor
+            </a></li>
+            <li><a href="{% url 'ticket_search' %}" class="{% if request.resolver_match.url_name == 'ticket_search' %}active{% endif %}">
+              <i class="fas fa-search"></i> Search
+            </a></li>
+            <li><a href="{% url 'ticket_stats' %}" class="{% if request.resolver_match.url_name == 'ticket_stats' %}active{% endif %}">
+              <i class="fas fa-chart-bar"></i> Analytics
+            </a></li>
+
+            <li><a href="{% url 'financial_reports' %}" class="{% if request.resolver_match.url_name == 'financial_reports' %}active{% endif %}">
+              <i class="fas fa-coins"></i> Financial Reports
+            </a></li>
+
+            <li><a href="{% url 'settings' %}" class="{% if request.resolver_match.url_name == 'settings' %}active{% endif %}">
+              <i class="fas fa-cog"></i> Settings
+            </a></li>
+          </ul>
+        {% elif user.operator_profile %}
+          <!-- Operator Menu -->
+          <ul class="sidebar-menu">
+            <li><a href="{% url 'operator_dashboard' %}" class="{% if request.resolver_match.url_name == 'operator_dashboard' %}active{% endif %}">
+              <i class="fas fa-tachometer-alt"></i> Operator Dashboard
+            </a></li>
+            <li><a href="{% url 'register_user' %}" class="{% if request.resolver_match.url_name == 'register_user' %}active{% endif %}">
+              <i class="fas fa-user-plus"></i> Register User
+            </a></li>
+            <li><a href="{% url 'operator_users' %}" class="{% if request.resolver_match.url_name == 'operator_users' %}active{% endif %}">
+              <i class="fas fa-users"></i> My Users
+            </a></li>
+            <li><a href="{% url 'scan_monitor' %}" class="{% if request.resolver_match.url_name == 'scan_monitor' %}active{% endif %}">
+              <i class="fas fa-qrcode"></i> Scan Tickets
+            </a></li>
+            <li><a href="{% url 'ticket_search' %}" class="{% if request.resolver_match.url_name == 'ticket_search' %}active{% endif %}">
+              <i class="fas fa-search"></i> Search
+            </a></li>
+          </ul>
+        {% else %}
+          <!-- Standard User Menu -->
+          <ul class="sidebar-menu">
+            <li><a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+              <i class="fas fa-home"></i> Dashboard
+            </a></li>
+            <li><a href="{% url 'users_list' %}" class="{% if request.resolver_match.url_name == 'users_list' %}active{% endif %}">
+              <i class="fas fa-users"></i> Users
+            </a></li>
+            <li><a href="{% url 'register_user' %}" class="{% if request.resolver_match.url_name == 'register_user' %}active{% endif %}">
+              <i class="fas fa-user-plus"></i> Register
+            </a></li>
+            <li><a href="{% url 'ticket_list' %}" class="{% if request.resolver_match.url_name == 'ticket_list' %}active{% endif %}">
+              <i class="fas fa-ticket-alt"></i> Tickets
+            </a></li>
+            <li><a href="{% url 'scan_monitor' %}" class="{% if request.resolver_match.url_name == 'scan_monitor' %}active{% endif %}">
+              <i class="fas fa-qrcode"></i> Scan Monitor
+            </a></li>
+            <li><a href="{% url 'ticket_search' %}" class="{% if request.resolver_match.url_name == 'ticket_search' %}active{% endif %}">
+              <i class="fas fa-search"></i> Search
+            </a></li>
+            <li><a href="{% url 'ticket_stats' %}" class="{% if request.resolver_match.url_name == 'ticket_stats' %}active{% endif %}">
+              <i class="fas fa-chart-bar"></i> Analytics
+            </a></li>
+            <li><a href="{% url 'settings' %}" class="{% if request.resolver_match.url_name == 'settings' %}active{% endif %}">
+              <i class="fas fa-cog"></i> Settings
+            </a></li>
+          </ul>
+        {% endif %}
+        
+        {% endif %}
+      
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+  
+  <!-- jQuery (needed for some components) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  
+  <!-- Custom JavaScript -->
+  <script src="{% static 'js/script.js' %}"></script>
+  
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

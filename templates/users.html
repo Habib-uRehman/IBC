@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}User Management - Event Dashboard{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Handle delete user buttons
+    const deleteButtons = document.querySelectorAll('.delete-user');
+    
+    deleteButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const userId = this.dataset.id;
+        const userName = this.dataset.name;
+        
+        if (confirm(`Are you sure you want to delete user ${userName}? This action cannot be undone and will delete all associated tickets.`)) {
+          // Create a form to submit the delete request
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = `/user/${userId}/delete/`;
+          
+          // Add CSRF token
+          const csrfInput = document.createElement('input');
+          csrfInput.type = 'hidden';
+          csrfInput.name = 'csrfmiddlewaretoken';
+          csrfInput.value = '{{ csrf_token }}';
+          form.appendChild(csrfInput);
+          
+          // Submit the form
+          document.body.appendChild(form);
+          form.submit();
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="header">
+  <div class="header-title">User Management</div>
+  <div class="user-info">
+    <img src="{% static 'images/user.png' %}" alt="User">
+    <span>{{ request.user.username }}</span>
+  </div>
+</div>
+
+<div class="card-body" style="margin-bottom: 20px;">
+  <p>Manage registered users and their tickets</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Total Users</div>
+        <div class="stat-card-value">{{ total_count }}</div>
+      </div>
+      <i class="fas fa-users fa-lg" style="color: #64748b;"></i>
+    </div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Male Users</div>
+        <div class="stat-card-value">{{ male_count }}</div>
+      </div>
+      <i class="fas fa-male fa-lg" style="color: #64748b;"></i>
+    </div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Female Users</div>
+        <div class="stat-card-value">{{ female_count }}</div>
+      </div>
+      <i class="fas fa-female fa-lg" style="color: #64748b;"></i>
+    </div>
+  </div>
+</div>
+
+<!-- User Table -->
+<div class="card">
+  <div class="card-body">
+    <form method="GET" class="d-flex justify-between align-center mb-4">
+      <div class="d-flex">
+        <select name="gender" class="form-control" style="width: auto; margin-right: 10px;">
+          <option value="">All Gender</option>
+          <option value="male" {% if request.GET.gender == 'male' %}selected{% endif %}>Male</option>
+          <option value="female" {% if request.GET.gender == 'female' %}selected{% endif %}>Female</option>
+          <option value="other" {% if request.GET.gender == 'other' %}selected{% endif %}>Other</option>
+        </select>
+        
+        <input type="date" name="date" class="form-control" style="width: auto;" value="{{ request.GET.date|default:'' }}">
+      </div>
+      
+      <div>
+        <input type="text" name="search" class="form-control" placeholder="Search users or tickets..." value="{{ request.GET.search|default:'' }}" style="width: 250px;">
+        <button type="submit" class="btn btn-primary">Search</button>
+      </div>
+    </form>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>User ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>CNIC</th>
+          <th>Gender</th>
+          <th>Tickets</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in page_obj %}
+        <tr>
+          <td>{{ user.user_id|truncatechars:8 }}</td>
+          <td>{{ user.full_name }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.cnic_number }}</td>
+          <td>{{ user.get_gender_display }}</td>
+          <td>
+            {% with ticket_count=user.tickets.count %}
+            {% if ticket_count > 0 %}
+              <span class="badge badge-success">{{ ticket_count }} ticket{{ ticket_count|pluralize }}</span>
+            {% else %}
+              <span class="badge badge-secondary">No tickets</span>
+            {% endif %}
+            {% endwith %}
+          </td>
+          <td>
+            <a href="{% url 'user_detail' user_id=user.user_id %}" class="btn btn-icon btn-outline" title="View user details"><i class="fas fa-eye"></i></a>
+            <a href="{% url 'generate_ticket' user_id=user.user_id %}" class="btn btn-icon btn-outline" title="Generate ticket"><i class="fas fa-ticket-alt"></i></a>
+            <a href="{% url 'edit_user' user_id=user.user_id %}" class="btn btn-icon btn-outline" title="Edit user"><i class="fas fa-edit"></i></a>
+            <button type="button" class="btn btn-icon btn-outline delete-user" data-id="{{ user.user_id }}" data-name="{{ user.full_name }}" title="Delete user"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center">No users found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    
+    <div class="d-flex justify-between align-center mt-4">
+      <div>Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ total_count }} users</div>
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+          <a href="?page=1{% if request.GET.gender %}&gender={{ request.GET.gender }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="pagination-item">First</a>
+          <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.gender %}&gender={{ request.GET.gender }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="pagination-item">Previous</a>
+        {% endif %}
+        
+        {% for i in page_obj.paginator.page_range %}
+          {% if i == page_obj.number %}
+            <a href="#" class="pagination-item active">{{ i }}</a>
+          {% elif i > page_obj.number|add:"-3" and i < page_obj.number|add:"3" %}
+            <a href="?page={{ i }}{% if request.GET.gender %}&gender={{ request.GET.gender }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="pagination-item">{{ i }}</a>
+          {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if request.GET.gender %}&gender={{ request.GET.gender }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="pagination-item">Next</a>
+          <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.gender %}&gender={{ request.GET.gender }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="pagination-item">Last</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card mt-4">
+  <div class="card-header">
+    <div>Quick Actions</div>
+  </div>
+  <div class="card-body">
+    <div class="d-flex" style="gap: 15px;">
+      <a href="{% url 'register_user' %}" class="btn btn-primary" style="flex: 1;">
+        <i class="fas fa-user-plus"></i> Register New User
+      </a>
+      <a href="{% url 'generate_report' %}" class="btn btn-outline" style="flex: 1;">
+        <i class="fas fa-download"></i> Export User Data
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

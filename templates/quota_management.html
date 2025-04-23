@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Quota Management - Event Dashboard{% endblock %}
+
+{% block content %}
+<div class="header">
+  <div class="header-title">Quota Management</div>
+  <div class="user-info">
+    <img src="{% static 'images/user.png' %}" alt="User">
+    <span>{{ request.user.username }}</span>
+  </div>
+</div>
+
+{% if messages %}
+<div class="messages">
+  {% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %}">
+      {{ message }}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="card-body" style="margin-bottom: 20px;">
+  <p>Manage ticket quotas for each ticket type</p>
+</div>
+
+<!-- Quota Management -->
+<div class="card">
+  <div class="card-header">
+    <div>Ticket Quotas</div>
+  </div>
+  <div class="card-body">
+    <table>
+      <thead>
+        <tr>
+          <th>Ticket Type</th>
+          <th>Total Quota</th>
+          <th>Sold</th>
+          <th>Remaining</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for quota in quotas %}
+        <tr>
+          <td>{{ quota.ticket_type }}</td>
+          <td>{{ quota.total_quantity }}</td>
+          <td>{{ quota.sold_quantity }}</td>
+          <td>{{ quota.remaining }}</td>
+          <td>
+            <button class="btn btn-outline btn-sm edit-quota" data-id="{{ quota.id }}" data-type="{{ quota.ticket_type }}" data-total="{{ quota.total_quantity }}">
+              <i class="fas fa-edit"></i> Edit
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Edit Quota Modal -->
+<div id="edit-quota-modal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Edit Quota</h3>
+      <span class="close">&times;</span>
+    </div>
+    <div class="modal-body">
+      <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" id="quota_id" name="quota_id">
+        
+        <div class="form-group">
+          <label for="ticket_type" class="form-label">Ticket Type</label>
+          <input type="text" id="ticket_type" class="form-control" readonly>
+        </div>
+        
+        <div class="form-group">
+          <label for="total_quantity" class="form-label">Total Quota</label>
+          <input type="number" id="total_quantity" name="total_quantity" class="form-control" min="0" required>
+          <small class="text-muted">Note: Reducing quota below sold tickets count is not recommended</small>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Update Quota</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Back to Dashboard Button -->
+<div class="mt-4">
+  <a href="{% url 'admin_dashboard' %}" class="btn btn-outline">
+    <i class="fas fa-arrow-left"></i> Back to Dashboard
+  </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Handle edit quota buttons
+    const editButtons = document.querySelectorAll('.edit-quota');
+    const modal = document.getElementById('edit-quota-modal');
+    const closeBtn = modal.querySelector('.close');
+    
+    // Form fields
+    const quotaIdInput = document.getElementById('quota_id');
+    const ticketTypeInput = document.getElementById('ticket_type');
+    const totalQuantityInput = document.getElementById('total_quantity');
+    
+    // Open modal on edit button click
+    editButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const id = this.dataset.id;
+        const type = this.dataset.type;
+        const total = this.dataset.total;
+        
+        quotaIdInput.value = id;
+        ticketTypeInput.value = type;
+        totalQuantityInput.value = total;
+        
+        modal.style.display = 'block';
+      });
+    });
+    
+    // Close modal on X click
+    closeBtn.addEventListener('click', function() {
+      modal.style.display = 'none';
+    });
+    
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+  });
+</script>
+{% endblock %}

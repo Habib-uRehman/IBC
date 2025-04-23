@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Operator Dashboard - Event Dashboard{% endblock %}
+
+{% block content %}
+<div class="header">
+  <div class="header-title">Operator Dashboard - {{ operator.name }}</div>
+  <div class="user-info">
+    <img src="{% static 'images/user.png' %}" alt="User">
+    <span>{{ request.user.username }}</span>
+  </div>
+</div>
+
+<div class="card-body" style="margin-bottom: 20px;">
+  <p>Welcome to your operator dashboard. You can register users and generate tickets here.</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Users Registered</div>
+        <div class="stat-card-value">{{ users_registered }}</div>
+      </div>
+      <i class="fas fa-users fa-lg" style="color: #64748b;"></i>
+    </div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Total Tickets</div>
+        <div class="stat-card-value">{{ total_tickets }}</div>
+      </div>
+      <i class="fas fa-ticket-alt fa-lg" style="color: #64748b;"></i>
+    </div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Gawader Tickets</div>
+        <div class="stat-card-value">{{ gawader_tickets }}</div>
+      </div>
+      <i class="fas fa-ticket-alt fa-lg" style="color: #1d4ed8;"></i>
+    </div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Chaman Tickets</div>
+        <div class="stat-card-value">{{ chaman_tickets }}</div>
+      </div>
+      <i class="fas fa-ticket-alt fa-lg" style="color: #dc2626;"></i>
+    </div>
+  </div>
+</div>
+
+<!-- Ticket Quotas -->
+<div class="card mt-4">
+  <div class="card-header">
+    <div>Ticket Quotas</div>
+  </div>
+  <div class="card-body">
+    <div class="grid-50-50">
+      <div class="quota-card">
+        <h3>Gawader Enclosure</h3>
+        <div class="progress-container">
+          <div class="progress-bar" style="width: {% if gawader_quota.total_quantity > 0 %}{{ gawader_quota.sold_quantity|floatformat:0 }}{% else %}0{% endif %}%"></div>
+        </div>
+        <div class="d-flex justify-between mt-2">
+          <div>{{ gawader_quota.sold_quantity }} sold</div>
+          <div>{{ gawader_quota.remaining }} remaining</div>
+        </div>
+      </div>
+      
+      <div class="quota-card">
+        <h3>Chaman Enclosure</h3>
+        <div class="progress-container">
+          <div class="progress-bar" style="width: {% if chaman_quota.total_quantity > 0 %}{{ chaman_quota.sold_quantity|floatformat:0 }}{% else %}0{% endif %}%"></div>
+        </div>
+        <div class="d-flex justify-between mt-2">
+          <div>{{ chaman_quota.sold_quantity }} sold</div>
+          <div>{{ chaman_quota.remaining }} remaining</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card mt-4">
+  <div class="card-header">
+    <div>Quick Actions</div>
+  </div>
+  <div class="card-body">
+    <div class="d-flex" style="gap: 15px;">
+      <a href="{% url 'register_user' %}" class="btn btn-primary" style="flex: 1;">
+        <i class="fas fa-user-plus"></i> Register New User
+      </a>
+      <a href="{% url 'operator_users' %}" class="btn btn-primary" style="flex: 1;">
+        <i class="fas fa-users"></i> View Your Users
+      </a>
+      <a href="{% url 'scan_monitor' %}" class="btn btn-outline" style="flex: 1;">
+        <i class="fas fa-qrcode"></i> Scan Tickets
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="grid-50-50 mt-4">
+  <div class="card">
+    <div class="card-header">
+      <div>Recent Users</div>
+      <a href="{% url 'operator_users' %}" class="btn btn-outline btn-sm">View All</a>
+    </div>
+    <div class="card-body">
+      {% for user in recent_users %}
+      <div class="recent-item">
+        <div class="d-flex justify-between">
+          <div>
+            <strong>{{ user.full_name }}</strong>
+            {% if user.relationship != 'self' %}
+            <span class="badge">{{ user.get_relationship_display }}</span>
+            {% endif %}
+          </div>
+          <div>{{ user.created_at|date:"M d, Y" }}</div>
+        </div>
+        <div class="text-muted">CNIC: {{ user.cnic_number }}</div>
+      </div>
+      {% empty %}
+      <p>No users registered yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+  
+  <div class="card">
+    <div class="card-header">
+      <div>Recent Tickets</div>
+    </div>
+    <div class="card-body">
+      {% for ticket in recent_tickets %}
+      <div class="recent-item">
+        <div class="d-flex justify-between">
+          <div>
+            <strong>{{ ticket.user.full_name }}</strong>
+            <span class="badge">{{ ticket.get_ticket_type_display }}</span>
+          </div>
+          <div>{{ ticket.created_at|date:"M d, Y" }}</div>
+        </div>
+        <div>
+          <a href="{% url 'print_ticket' ticket_id=ticket.ticket_id %}" class="btn btn-sm btn-outline">
+            <i class="fas fa-print"></i> Print
+          </a>
+        </div>
+      </div>
+      {% empty %}
+      <p>No tickets generated yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Ticket Statistics - Event Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Additional specific styling for statistics page */
+  .stats-container {
+    margin-bottom: 30px;
+  }
+  
+  .chart-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  
+  @media (max-width: 768px) {
+    .chart-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header">
+  <div class="header-title">Ticket Statistics</div>
+  <div class="user-info">
+    <img src="{% static 'images/user.png' %}" alt="User">
+    <span>{{ request.user.username }}</span>
+  </div>
+</div>
+
+<div class="card-body" style="margin-bottom: 20px;">
+  <p>Overview of ticket sales and demographics</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid stats-container">
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Total Tickets</div>
+        <div class="stat-card-value">{{ total_tickets }}</div>
+      </div>
+      <i class="fas fa-ticket-alt fa-lg" style="color: #64748b;"></i>
+    </div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Scanned Tickets</div>
+        <div class="stat-card-value">{{ scanned_tickets }}</div>
+      </div>
+      <i class="fas fa-check-circle fa-lg" style="color: #64748b;"></i>
+    </div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Unscanned Tickets</div>
+        <div class="stat-card-value">{{ unscanned_tickets }}</div>
+      </div>
+      <i class="fas fa-clock fa-lg" style="color: #64748b;"></i>
+    </div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="d-flex justify-between">
+      <div>
+        <div class="stat-card-title">Tampered Tickets</div>
+        <div class="stat-card-value">{{ tampered_tickets }}</div>
+      </div>
+      <i class="fas fa-exclamation-triangle fa-lg" style="color: #64748b;"></i>
+    </div>
+  </div>
+</div>
+
+<!-- First Row of Charts -->
+<div class="chart-row">
+  <div class="card">
+    <div class="card-header">
+      <div>Tickets by Gender</div>
+    </div>
+    <div class="card-body">
+      <div class="chart-container">
+        <canvas id="gender-chart"></canvas>
+      </div>
+    </div>
+  </div>
+  
+  <div class="card">
+    <div class="card-header">
+      <div>Scanned vs Unscanned Tickets</div>
+    </div>
+    <div class="card-body">
+      <div class="chart-container">
+        <canvas id="sales-chart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Second Row of Charts -->
+<div class="chart-row">
+  <div class="card">
+    <div class="card-header">
+      <div>Ticket Types</div>
+    </div>
+    <div class="card-body">
+      <div class="chart-container">
+        <canvas id="ticket-types-chart"></canvas>
+      </div>
+    </div>
+  </div>
+  
+  <div class="card">
+    <div class="card-header">
+      <div>Gate Scans</div>
+    </div>
+    <div class="card-body">
+      <div class="chart-container">
+        <canvas id="gate-scans-chart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Report Generation -->
+<div class="card mt-4">
+  <div class="card-header">
+    <div>Generate Reports</div>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{% url 'generate_report' %}">
+      {% csrf_token %}
+      <div class="grid-50-50">
+        <div class="form-group">
+          <label for="{{ report_form.report_type.id_for_label }}" class="form-label">Report Type</label>
+          {{ report_form.report_type }}
+        </div>
+        
+        <div class="form-group">
+          <label for="{{ report_form.report_format.id_for_label }}" class="form-label">Format</label>
+          {{ report_form.report_format }}
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="date_range" class="form-label">Date Range</label>
+        <div class="d-flex">
+          {{ report_form.date_from }}
+          {{ report_form.date_to }}
+        </div>
+      </div>
+      
+      <button type="submit" class="btn btn-primary">Generate Report</button>
+    </form>
+  </div>
+</div>
+
+<!-- Conversion Stats -->
+<div class="card mt-4">
+  <div class="card-header">
+    <div>Conversion Stats</div>
+  </div>
+  <div class="card-body">
+    <table>
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Count</th>
+          <th>Percentage</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Scanned vs Total</td>
+          <td>{{ scanned_tickets }} / {{ total_tickets }}</td>
+          <td>
+            {% if total_tickets > 0 %}
+              {{ sold_percentage|floatformat:2 }}%
+            {% else %}
+              0%
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>Gate 1 vs Gate 2 Scans</td>
+          <td>{{ gate1_scans }} / {{ gate2_scans }}</td>
+          <td>
+            {% if gate1_scans > 0 %}
+              {{ gate_percentage|floatformat:2 }}%
+            {% else %}
+              0%
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>Tampered Rate</td>
+          <td>{{ tampered_tickets }} / {{ total_tickets }}</td>
+          <td>
+            {% if total_tickets > 0 %}
+              {{ tampered_percentage|floatformat:2 }}%
+            {% else %}
+              0%
+            {% endif %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card mt-4">
+  <div class="card-header">
+    <div>Quick Actions</div>
+  </div>
+  <div class="card-body">
+    <div style="display: flex; gap: 15px;">
+      <a href="{% url 'register_user' %}" class="btn btn-outline" style="flex: 1;">
+        <i class="fas fa-user-plus"></i> Register User
+      </a>
+      <a href="{% url 'scan_monitor' %}" class="btn btn-outline" style="flex: 1;">
+        <i class="fas fa-qrcode"></i> Scan Monitor
+      </a>
+      <a href="{% url 'users_list' %}" class="btn btn-outline" style="flex: 1;">
+        <i class="fas fa-users"></i> View Users
+      </a>
+      <a href="{% url 'generate_report' %}" class="btn btn-outline" style="flex: 1;">
+        <i class="fas fa-download"></i> Export Data
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Set default chart options
+    Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    Chart.defaults.font.size = 12;
+    Chart.defaults.color = '#6b7280';
+    
+    // Common chart options
+    const chartOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            usePointStyle: true,
+            padding: 20
+          }
+        }
+      }
+    };
+    
+    // Gender distribution chart
+    const genderCtx = document.getElementById('gender-chart').getContext('2d');
+    const genderChart = new Chart(genderCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Male', 'Female', 'Other'],
+        datasets: [{
+          label: 'Tickets by Gender',
+          data: [{{ gender_data.male }}, {{ gender_data.female }}, {{ gender_data.other }}],
+          backgroundColor: [
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(153, 102, 255, 0.8)'
+          ],
+          borderColor: [
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 99, 132, 1)',
+            'rgba(153, 102, 255, 1)'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        ...chartOptions,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+    
+    // Scanned vs Unscanned pie chart
+    const salesCtx = document.getElementById('sales-chart').getContext('2d');
+    const salesChart = new Chart(salesCtx, {
+      type: 'pie',
+      data: {
+        labels: ['Scanned', 'Unscanned'],
+        datasets: [{
+          data: [{{ scanned_tickets }}, {{ unscanned_tickets }}],
+          backgroundColor: [
+            'rgba(75, 192, 192, 0.7)',
+            'rgba(201, 203, 207, 0.7)'
+          ],
+          borderColor: [
+            'rgba(75, 192, 192, 1)',
+            'rgba(201, 203, 207, 1)'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: chartOptions
+    });
+    
+    // Ticket types chart
+    const ticketTypesCtx = document.getElementById('ticket-types-chart').getContext('2d');
+    const ticketTypesChart = new Chart(ticketTypesCtx, {
+      type: 'pie',
+      data: {
+        labels: ['Gwader End', 'Chaman End'],
+        datasets: [{
+          data: [{{ ticket_type_data.gawader }}, {{ ticket_type_data.chaman }}],
+          backgroundColor: [
+            'rgba(255, 159, 64, 0.7)',
+            'rgba(153, 102, 255, 0.7)'
+          ],
+          borderColor: [
+            'rgba(255, 159, 64, 1)',
+            'rgba(153, 102, 255, 1)'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: chartOptions
+    });
+    
+    // Gate scans chart
+    const gateScansCtx = document.getElementById('gate-scans-chart').getContext('2d');
+    const gateScansChart = new Chart(gateScansCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Gate 1', 'Gate 2'],
+        datasets: [{
+          data: [{{ gate1_scans }}, {{ gate2_scans }}],
+          backgroundColor: [
+            'rgba(54, 162, 235, 0.7)',
+            'rgba(255, 99, 132, 0.7)'
+          ],
+          borderColor: [
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 99, 132, 1)'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        ...chartOptions,
+        cutout: '60%'
+      }
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Register User - Event Dashboard{% endblock %}
+
+{% block content %}
+<div class="header">
+  <div class="header-title">Register New User</div>
+  <div class="user-info">
+    <img src="{% static 'images/user.png' %}" alt="User">
+    <span>{{ request.user.username }}</span>
+  </div>
+</div>
+
+{% if messages %}
+<div class="messages">
+  {% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %}">
+      {{ message }}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-body">
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      
+      <div class="form-group">
+        <label for="full_name" class="form-label">Full Name</label>
+        <input type="text" id="full_name" name="full_name" class="form-control" placeholder="Enter full name" required>
+      </div>
+
+      <div class="form-group">
+        <label for="father-name" class="form-label">Father Name</label>
+        <input type="text" id="father-name" name="father_name" class="form-control" placeholder="Father Name">
+      </div>
+      
+      <div class="form-group">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" id="email" name="email" class="form-control" placeholder="Enter email address" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="phone" class="form-label">Phone Number</label>
+        <input type="tel" id="phone" name="phone_number" class="form-control" placeholder="Enter phone number" required>
+      </div>
+
+      <div class="form-group">
+        <label for="cnic" class="form-label">CNIC Number</label>
+        <input type="text" id="cnic" name="cnic_number" class="form-control" placeholder="Enter CNIC number" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="relationship" class="form-label">Relationship Status</label>
+        <select id="relationship" name="relationship" class="form-control">
+          <option value="self">Self (Primary)</option>
+          <option value="spouse">Spouse</option>
+          <option value="child">Child</option>
+          <option value="parent">Parent</option>
+          <option value="sibling">Sibling</option>
+          <option value="other">Other</option>
+        </select>
+        <small class="text-muted">Select 'Self' if this is the primary attendee or if attendee has their own CNIC</small>
+      </div>
+      
+      <div class="form-group related-person-group" style="display: none;">
+        <label for="related_to" class="form-label">Related To (Primary CNIC Holder)</label>
+        <input type="text" id="related_to" name="related_to" class="form-control" placeholder="Name of primary person whose CNIC is being used">
+        <small class="text-muted">Enter the name of the person whose CNIC is being used</small>
+      </div>
+      
+      <div class="form-group">
+        <label for="gender" class="form-label">Gender</label>
+        <select id="gender" name="gender" class="form-control" required>
+          <option value="">Select gender</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="age" class="form-label">Age</label>
+        <input type="number" id="age" name="age" class="form-control" placeholder="Enter age">
+      </div>
+      
+      <div class="form-group">
+        <label for="profile_picture" class="form-label">Profile Picture</label>
+        <div style="border: 2px dashed var(--border); padding: 30px; text-align: center; border-radius: 4px; position: relative;">
+          <i class="fas fa-cloud-upload-alt fa-2x" style="color: var(--text-light);"></i>
+          <p>Drag and drop or click to upload</p>
+          <input type="file" name="profile_picture" id="profile_picture" style="position: static; width: 100%; opacity: 1;">
+        </div>
+      </div>
+      
+      <button type="submit" class="btn btn-primary">Register User</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Show/hide related fields based on relationship selection
+    const relationshipSelect = document.getElementById('relationship');
+    const relatedPersonGroup = document.querySelector('.related-person-group');
+    
+    // Initial state check
+    updateRelatedToVisibility();
+    
+    // On change
+    if (relationshipSelect) {
+      relationshipSelect.addEventListener('change', updateRelatedToVisibility);
+    }
+    
+    function updateRelatedToVisibility() {
+      if (relationshipSelect.value !== 'self') {
+        relatedPersonGroup.style.display = 'block';
+      } else {
+        relatedPersonGroup.style.display = 'none';
+      }
+    }
+    
+    // File upload preview
+    const profilePicture = document.getElementById('profile_picture');
+    if (profilePicture) {
+      profilePicture.addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            // Create preview if doesn't exist
+            let preview = document.querySelector('.profile-preview');
+            if (!preview) {
+              preview = document.createElement('div');
+              preview.className = 'profile-preview';
+              preview.style.marginTop = '10px';
+              preview.style.textAlign = 'center';
+              profilePicture.parentNode.appendChild(preview);
+            }
+            
+            preview.innerHTML = `
+              <img src="${e.target.result}" style="max-width: 150px; max-height: 150px; border-radius: 5px;">
+              <p style="margin-top: 5px;">Preview</p>
+            `;
+          }
+          reader.readAsDataURL(e.target.files[0]);
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

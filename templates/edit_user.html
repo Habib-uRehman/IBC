@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Edit User - {{ user.full_name }}{% endblock %}
+
+{% block content %}
+<div class="header">
+  <div class="header-title">Edit User</div>
+  <div class="user-info">
+    <img src="{% static 'images/user.png' %}" alt="User">
+    <span>{{ request.user.username }}</span>
+  </div>
+</div>
+
+{% if messages %}
+<div class="messages">
+  {% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %}">
+      {{ message }}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-body">
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      
+      <div class="form-group">
+        <label for="full_name" class="form-label">Full Name</label>
+        <input type="text" name="full_name" id="full_name" class="form-control" value="{{ user.full_name }}" required>
+      </div>
+
+      <div class="form-group">
+        <label for="father_name" class="form-label">Father Name</label>
+        <input type="text" name="father_name" id="father_name" class="form-control" value="{{ user.father_name|default:'' }}">
+      </div>
+      
+      <div class="form-group">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" name="email" id="email" class="form-control" value="{{ user.email }}" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="phone_number" class="form-label">Phone Number</label>
+        <input type="tel" name="phone_number" id="phone_number" class="form-control" value="{{ user.phone_number }}" required>
+      </div>
+
+      <div class="form-group">
+        <label for="cnic_number" class="form-label">CNIC Number</label>
+        <input type="text" name="cnic_number" id="cnic_number" class="form-control" value="{{ user.cnic_number }}" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="gender" class="form-label">Gender</label>
+        <select name="gender" id="gender" class="form-control" required>
+          <option value="male" {% if user.gender == 'male' %}selected{% endif %}>Male</option>
+          <option value="female" {% if user.gender == 'female' %}selected{% endif %}>Female</option>
+          <option value="other" {% if user.gender == 'other' %}selected{% endif %}>Other</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="age" class="form-label">Age</label>
+        <input type="number" name="age" id="age" class="form-control" value="{{ user.age|default:'' }}">
+      </div>
+      
+      <div class="form-group">
+        <label for="profile_picture" class="form-label">Profile Picture</label>
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+          {% if user.profile_picture %}
+            <img src="{{ user.profile_picture.url }}" alt="Current profile picture" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 10px;">
+            <span>Current profile picture</span>
+          {% else %}
+            <span>No profile picture uploaded</span>
+          {% endif %}
+        </div>
+        <div style="border: 2px dashed var(--border); padding: 30px; text-align: center; border-radius: 4px; position: relative;">
+          <i class="fas fa-cloud-upload-alt fa-2x" style="color: var(--text-light);"></i>
+          <p>Drag and drop or click to upload new picture</p>
+          <input type="file" name="profile_picture" id="profile_picture" style="position: static; width: 100%; opacity: 1;">
+        </div>
+      </div>
+      
+      <div class="d-flex justify-between mt-4">
+        <a href="{% url 'user_detail' user_id=user.user_id %}" class="btn btn-outline">Cancel</a>
+        <button type="submit" class="btn btn-primary">Update User</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
