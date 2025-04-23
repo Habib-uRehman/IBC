@@ -1,6 +1,1 @@
-Procfile
-
-web: gunicorn IBC.wsgi --log-file - 
-#or works good with external database
 web: python manage.py migrate && gunicorn IBC.wsgi
-
